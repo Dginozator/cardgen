@@ -1,8 +1,1 @@
-# Core image pipeline
-numpy>=1.24,<3
-opencv-python-headless>=4.8,<5
-Pillow>=10,<12
-
-# Optional: --white-bg (downloads model on first use)
-rembg>=2.0,<3
-onnxruntime>=1.16,<2
+openai>=1.40,<2

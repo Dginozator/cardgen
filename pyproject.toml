@@ -5,15 +5,11 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "cardgen"
 version = "0.1.0"
-description = "CLI: improve marketplace product photos"
+description = "CLI: product photos via RouterAI (GPT-5.4 + Nano Banana)"
 readme = "PLAN.md"
 requires-python = ">=3.10"
 dependencies = [
-    "numpy>=1.24,<3",
-    "opencv-python-headless>=4.8,<5",
-    "Pillow>=10,<12",
-    "rembg>=2.0,<3",
-    "onnxruntime>=1.16,<2",
+    "openai>=1.40,<2",
 ]
 
 [project.scripts]
