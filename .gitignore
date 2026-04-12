@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+
+# Generated sample outputs
+samples/out/
+samples/out_white/
+samples/electronics/out/
+samples/electronics/out_white/
+# WB search previews (wb-download); keep only your own photos committed
+samples/electronics/in/wb_*.webp

@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cardgen"
+version = "0.1.0"
+description = "CLI: improve marketplace product photos"
+readme = "PLAN.md"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.24,<3",
+    "opencv-python-headless>=4.8,<5",
+    "Pillow>=10,<12",
+    "rembg>=2.0,<3",
+    "onnxruntime>=1.16,<2",
+]
+
+[project.scripts]
+cardgen = "cardgen.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["cardgen*"]
