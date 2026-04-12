@@ -15,3 +15,6 @@ samples/electronics/out/
 samples/electronics/out_white/
 # WB search previews (wb-download); keep only your own photos committed
 samples/electronics/in/wb_*.webp
+
+# Web uploads / temp
+data/

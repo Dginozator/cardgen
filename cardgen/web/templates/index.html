@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cardgen</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Cardgen</h1>
+    <p class="lead">Текст + фото товара + референс (файл или ссылка). Без личного кабинета.</p>
+  </header>
+
+  <main>
+    <form id="form" class="panel" method="post" enctype="multipart/form-data" accept-charset="utf-8">
+      <label>
+        Запрос
+        <textarea name="prompt" rows="5" required placeholder="Например: главное фото для WB, инфографика с преимуществами, стиль как на референсе"></textarea>
+      </label>
+
+      <label>
+        Фото товара (обязательно)
+        <input type="file" name="product" accept="image/*" required />
+      </label>
+
+      <fieldset>
+        <legend>Референс карточки (необязательно)</legend>
+        <label>
+          Файл картинки
+          <input type="file" name="reference" accept="image/*" />
+        </label>
+        <label>
+          Или ссылка на страницу товара / прямую картинку
+          <input type="url" name="reference_url" placeholder="https://..." />
+        </label>
+        <p class="hint">Если указаны и файл, и ссылка — используется файл.</p>
+      </fieldset>
+
+      <div class="row">
+        <label class="check">
+          <input type="checkbox" name="skip_enhance" value="true" />
+          Без усиления промпта (GPT)
+        </label>
+        <label class="check">
+          <input type="checkbox" name="with_review" value="true" />
+          Ревью результата (GPT, дольше)
+        </label>
+      </div>
+
+      <button type="submit" id="btn">Сгенерировать</button>
+      <p id="status" class="status" aria-live="polite"></p>
+    </form>
+
+    <section id="out" class="panel hidden">
+      <h2>Результат</h2>
+      <p class="hint">После успешной генерации картинка появляется ниже (блок «Результат» под формой).</p>
+      <img id="preview" alt="Результат" />
+      <details>
+        <summary>Промпт для генератора</summary>
+        <pre id="enhanced"></pre>
+      </details>
+      <details id="rev-wrap" class="hidden">
+        <summary>Ревью</summary>
+        <pre id="review"></pre>
+      </details>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById("form");
+    const btn = document.getElementById("btn");
+    const status = document.getElementById("status");
+    const out = document.getElementById("out");
+    const preview = document.getElementById("preview");
+    const enhanced = document.getElementById("enhanced");
+    const review = document.getElementById("review");
+    const revWrap = document.getElementById("rev-wrap");
+    let previewObjectUrl = null;
+
+    function base64ToBlob(base64, mime) {
+      const bin = atob(base64);
+      const len = bin.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) bytes[i] = bin.charCodeAt(i);
+      return new Blob([bytes], { type: mime || "image/png" });
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      status.textContent = "Запрос…";
+      btn.disabled = true;
+      out.classList.add("hidden");
+      const fd = new FormData(form);
+      const ref = fd.get("reference");
+      if (!ref || !ref.size) fd.delete("reference");
+      try {
+        const r = await fetch("/api/generate", { method: "POST", body: fd });
+        const text = await r.text();
+        let j;
+        try {
+          j = JSON.parse(text);
+        } catch {
+          status.textContent = "Не JSON (HTTP " + r.status + "): " + text.slice(0, 200);
+          return;
+        }
+        if (!r.ok || !j.ok) {
+          let err = (j && j.error) || ("HTTP " + r.status);
+          if (j && j.log_hint) err += " — " + j.log_hint;
+          status.textContent = err;
+          return;
+        }
+        if (previewObjectUrl) {
+          URL.revokeObjectURL(previewObjectUrl);
+          previewObjectUrl = null;
+        }
+        const blob = base64ToBlob(j.image_base64, j.mime);
+        previewObjectUrl = URL.createObjectURL(blob);
+        preview.src = previewObjectUrl;
+        enhanced.textContent = j.enhanced_prompt || "";
+        if (j.review) {
+          review.textContent = j.review;
+          revWrap.classList.remove("hidden");
+        } else {
+          revWrap.classList.add("hidden");
+        }
+        out.classList.remove("hidden");
+        status.textContent = "Готово.";
+      } catch (err) {
+        status.textContent = "Сеть или сервер: " + err;
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

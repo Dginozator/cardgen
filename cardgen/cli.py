@@ -7,6 +7,7 @@ import logging
 import sys
 from pathlib import Path
 
+from cardgen.log_config import ensure_file_logging
 from cardgen.routerai import process_directory_remote, run_generate_pipeline
 
 
@@ -131,9 +132,10 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     level = logging.DEBUG if getattr(args, "verbose", False) else logging.INFO
-    logging.basicConfig(level=level, format="%(levelname)s %(message)s")
+    logging.basicConfig(level=level, format="%(levelname)s [%(name)s] %(message)s")
     for name in ("httpcore", "httpx", "openai"):
         logging.getLogger(name).setLevel(logging.WARNING)
+    ensure_file_logging()
 
     if args.command == "generate":
         try:
@@ -144,8 +146,15 @@ def main(argv: list[str] | None = None) -> int:
                 skip_enhance=args.skip_enhance,
                 skip_review=args.skip_review,
             )
-        except Exception:
-            logging.exception("generate failed")
+        except Exception as e:
+            from cardgen.log_config import format_api_error, log_dir
+
+            logging.exception("generate command failed | %s", format_api_error(e))
+            print(f"\nОшибка: {e}", file=sys.stderr)
+            print(
+                f"Подробности (traceback, шаги pipeline[generate], ответ API) — в: {log_dir() / 'cardgen.log'}",
+                file=sys.stderr,
+            )
             return 1
         _print_report(outcome, skip_review=args.skip_review)
         if args.review_file and not args.skip_review:
