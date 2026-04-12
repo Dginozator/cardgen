@@ -1,4 +1,9 @@
-"""Remote processing via RouterAI (OpenAI-compatible API)."""
+"""Remote processing via RouterAI (OpenAI-compatible API).
+
+Переменные из `.env` (после load_dotenv): ROUTERAI_API_KEY или OPENAI_API_KEY (обязательно);
+опционально ROUTERAI_BASE_URL, CARDGEN_CHAT_MODEL, CARDGEN_IMAGE_MODEL.
+Пустое значение в .env = использовать встроенный default.
+"""
 
 from __future__ import annotations
 
@@ -7,18 +12,60 @@ import logging
 import mimetypes
 import os
 import re
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
+from dotenv import load_dotenv
 from openai import OpenAI
 
 logger = logging.getLogger(__name__)
+
+
+def _load_dotenv_files() -> None:
+    """Load .env from repo root (next to pyproject.toml) or walk up from cwd."""
+    here = Path(__file__).resolve()
+    for d in here.parents:
+        if (d / "pyproject.toml").is_file() and (d / ".env").is_file():
+            load_dotenv(d / ".env")
+            return
+    load_dotenv()
+
+
+_load_dotenv_files()
 
 DEFAULT_BASE_URL = "https://routerai.ru/api/v1"
 DEFAULT_CHAT_MODEL = "openai/gpt-5.4"
 DEFAULT_IMAGE_MODEL = "google/gemini-2.5-flash-image"
 
+
+def _env_optional(key: str, default: str) -> str:
+    """Read env; empty or whitespace-only string falls back to default."""
+    raw = os.environ.get(key)
+    if raw is None:
+        return default
+    s = str(raw).strip()
+    return s if s else default
+
 SUPPORTED_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff"}
+
+PROMPT_ENHANCER_SYSTEM = (
+    "Ты усиливаешь черновой текстовый запрос пользователя для модели генерации изображений "
+    "(Nano Banana / Gemini Image). Сохрани намерение пользователя, добавь конкретику: композиция, свет, "
+    "материалы, фон, стиль, соотношение сторон, детали кадра. "
+    "Ты хорошо понимаешь сегментацию сцены: если нужен изолированный товар, чётко опиши границы объекта, "
+    "отделение от фона, при необходимости -- нейтральный или белый фон #FFFFFF для маркетплейса. "
+    "Ответь ОДНИМ готовым промптом для генератора, без преамбулы и пояснений."
+)
+
+REVIEWER_SYSTEM = (
+    "Ты проверяешь результат генерации изображения по запросу. У тебя есть исходный запрос пользователя, "
+    "промпт, который ушёл в генератор, и само изображение. "
+    "Дай краткую оценку (2-4 предложения), затем нумерованный список из 3-7 конкретных предложений, "
+    "что можно улучшить в следующей итерации (свет, композиция, фон, детали, артефакты, текст на товаре). "
+    "В конце одна строка: готовность к публикации: да / с доработками / нет -- с пояснением в скобках. "
+    "Пиши по-русски, деловым тоном."
+)
 
 PLANNER_SYSTEM = (
     "Ты помогаешь готовить фото товара для маркетплейса (Wildberries). "
@@ -33,22 +80,23 @@ def _env_api_key() -> str:
     key = os.environ.get("ROUTERAI_API_KEY") or os.environ.get("OPENAI_API_KEY")
     if not key or not key.strip():
         raise RuntimeError(
-            "Задайте переменную окружения ROUTERAI_API_KEY (или OPENAI_API_KEY) с ключом RouterAI."
+            "Нет ключа RouterAI: задайте ROUTERAI_API_KEY в файле .env в корне проекта "
+            "(скопируйте .env.example в .env) или в переменных окружения."
         )
     return key.strip()
 
 
 def make_client() -> OpenAI:
-    base = os.environ.get("ROUTERAI_BASE_URL", DEFAULT_BASE_URL).strip().rstrip("/")
+    base = _env_optional("ROUTERAI_BASE_URL", DEFAULT_BASE_URL).rstrip("/")
     return OpenAI(api_key=_env_api_key(), base_url=base)
 
 
 def chat_model_id() -> str:
-    return os.environ.get("CARDGEN_CHAT_MODEL", DEFAULT_CHAT_MODEL).strip()
+    return _env_optional("CARDGEN_CHAT_MODEL", DEFAULT_CHAT_MODEL)
 
 
 def image_model_id() -> str:
-    return os.environ.get("CARDGEN_IMAGE_MODEL", DEFAULT_IMAGE_MODEL).strip()
+    return _env_optional("CARDGEN_IMAGE_MODEL", DEFAULT_IMAGE_MODEL)
 
 
 def _guess_mime(path: Path) -> str:
@@ -102,6 +150,129 @@ def _assistant_visible_text(message: object) -> str:
     if isinstance(content, list):
         return _message_text(content)
     return ""
+
+
+def enhance_prompt_for_generation(
+    client: OpenAI,
+    user_prompt: str,
+    *,
+    context: str | None = None,
+) -> str:
+    """Turn user draft into a strong prompt for Nano Banana (text-only generation)."""
+    parts = ["Черновик запроса пользователя:", user_prompt.strip()]
+    if context and context.strip():
+        parts.extend(["", "Дополнительный контекст:", context.strip()])
+    r = client.chat.completions.create(
+        model=chat_model_id(),
+        messages=[
+            {"role": "system", "content": PROMPT_ENHANCER_SYSTEM},
+            {"role": "user", "content": "\n".join(parts)},
+        ],
+    )
+    text = _assistant_visible_text(r.choices[0].message)
+    if not text:
+        raise RuntimeError("Пустой ответ при усилении промпта.")
+    return text.strip()
+
+
+def generate_image_from_prompt(client: OpenAI, prompt: str) -> bytes:
+    """Text-to-image via Nano Banana (no reference image)."""
+    r = client.chat.completions.create(
+        model=image_model_id(),
+        messages=[{"role": "user", "content": prompt.strip()}],
+    )
+    raw = _assistant_visible_text(r.choices[0].message)
+    if not raw:
+        raise RuntimeError("Пустой ответ модели изображений.")
+    return _extract_image_bytes(raw)
+
+
+def review_generated_image(
+    client: OpenAI,
+    image_path: Path,
+    *,
+    user_prompt: str,
+    generation_prompt: str,
+) -> str:
+    """GPT-5.4 vision: critique + improvement ideas."""
+    body = (
+        "Исходный запрос пользователя:\n"
+        f"{user_prompt.strip()}\n\n"
+        "Промпт, отправленный в генератор изображений:\n"
+        f"{generation_prompt.strip()}\n\n"
+        "Оцени приложенное сгенерированное изображение."
+    )
+    r = client.chat.completions.create(
+        model=chat_model_id(),
+        messages=[
+            {"role": "system", "content": REVIEWER_SYSTEM},
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": body},
+                    {"type": "image_url", "image_url": {"url": _image_data_url(image_path)}},
+                ],
+            },
+        ],
+    )
+    text = _assistant_visible_text(r.choices[0].message)
+    if not text:
+        raise RuntimeError("Пустой ответ ревьюера.")
+    return text.strip()
+
+
+@dataclass(frozen=True)
+class GenerateOutcome:
+    user_prompt: str
+    enhanced_prompt: str
+    image_path: Path
+    review: str
+
+
+def run_generate_pipeline(
+    user_prompt: str,
+    out_path: Path,
+    *,
+    context: str | None = None,
+    skip_enhance: bool = False,
+    skip_review: bool = False,
+) -> GenerateOutcome:
+    """
+    1) GPT усиливает промпт (optional)
+    2) Nano Banana генерирует изображение по тексту
+    3) GPT проверяет картинку и предлагает улучшения (optional)
+    """
+    client = make_client()
+    if skip_enhance:
+        enhanced = user_prompt.strip()
+        logger.info("Шаг усиления промпта пропущен.")
+    else:
+        enhanced = enhance_prompt_for_generation(client, user_prompt, context=context)
+        logger.info("Промпт усилен (%d символов).", len(enhanced))
+
+    data = generate_image_from_prompt(client, enhanced)
+    out_path = out_path.resolve()
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_bytes(data)
+    logger.info("Изображение сохранено: %s", out_path)
+
+    if skip_review:
+        review = ""
+    else:
+        review = review_generated_image(
+            client,
+            out_path,
+            user_prompt=user_prompt,
+            generation_prompt=enhanced,
+        )
+        logger.info("Ревью готово (%d символов).", len(review))
+
+    return GenerateOutcome(
+        user_prompt=user_prompt.strip(),
+        enhanced_prompt=enhanced,
+        image_path=out_path,
+        review=review,
+    )
 
 
 def plan_image_instruction(
