@@ -1,5 +1,7 @@
 # Cardgen (ветка extgen) — только RouterAI
 
+Отложенные задачи и идеи развития — в **[`BACKLOG.md`](BACKLOG.md)**.
+
 ## Идея
 
 Вся генерация и проверка — **удалённо** через **[RouterAI](https://routerai.ru)** (OpenAI-совместимый API). Локально нет CV/rembg.
@@ -85,6 +87,12 @@ cardgen-serve
 | `prompts.log` | По одной строке на каждый вызов API: **время (UTC)** \\t **модель** \\t **промпт** (`op=операция \| ...`, текст сообщений; вместо картинок — `[image]`). |
 
 При сбое **`cardgen generate`** или веб-формы смотрите **`cardgen.log`**: шаги `pipeline[generate]` / `pipeline[web]`, полный traceback, для API — `format_api_error` (HTTP-код, `body` от провайдера). В консоли CLI выводится путь к логу; в JSON ошибки API — поле `log_hint`.
+
+### Git: граф истории
+
+```powershell
+git log --graph --oneline --all --decorate -n 30
+```
 
 ## Не входит в эту ветку
 
