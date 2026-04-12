@@ -1,4 +1,4 @@
-"""Command-line interface."""
+"""Command-line interface (RouterAI only: GPT-5.4 + Nano Banana)."""
 
 from __future__ import annotations
 
@@ -7,84 +7,52 @@ import logging
 import sys
 from pathlib import Path
 
-from cardgen.pipeline import process_directory
-from cardgen.wb_catalog import download_query_to_folder
+from cardgen.routerai import process_directory_remote
+
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="cardgen",
-        description="Improve product photos for marketplaces (folder in → folder out).",
+        description="Обработка фото товаров через RouterAI (GPT-5.4 -> Nano Banana), без локального CV.",
     )
     sub = p.add_subparsers(dest="command", required=True)
 
-    proc = sub.add_parser("process", help="Process all images under --in into --out")
+    proc = sub.add_parser(
+        "process",
+        help="Для каждого изображения: план (GPT) и редактирование (Nano Banana); PNG в --out",
+    )
     proc.add_argument(
         "--in",
         dest="input_dir",
         type=Path,
         required=True,
-        help="Input directory (recursive)",
+        help="Входная папка (рекурсивно)",
     )
     proc.add_argument(
         "--out",
         dest="output_dir",
         type=Path,
         required=True,
-        help="Output directory (mirrors relative paths)",
+        help="Выходная папка (те же относительные пути, расширение .png)",
     )
     proc.add_argument(
-        "--white-bg",
-        action="store_true",
-        help="Segment product and composite on white (#FFFFFF)",
+        "--brief",
+        type=str,
+        default=None,
+        help="Дополнительный контекст для планировщика (ниша, требования к фону и т.д.)",
     )
     proc.add_argument(
-        "--min-long-edge",
-        type=int,
-        default=1600,
-        metavar="PX",
-        help="Upscale so the long edge is at least this many pixels (default: 1600)",
+        "--instruction",
+        type=str,
+        default=None,
+        metavar="TEXT",
+        help="Если задано, шаг GPT пропускается; эта инструкция передаётся в Nano Banana для всех файлов",
     )
     proc.add_argument(
         "-v",
         "--verbose",
         action="store_true",
-        help="Verbose logging",
-    )
-
-    wb = sub.add_parser(
-        "wb-download",
-        help="Download first catalog images from WB search (for local testing only)",
-    )
-    wb.add_argument(
-        "--query",
-        required=True,
-        help='Search query (e.g. "бытовая техника")',
-    )
-    wb.add_argument(
-        "--out",
-        type=Path,
-        required=True,
-        help="Directory to save .webp files",
-    )
-    wb.add_argument("--pages", type=int, default=1, help="Search pages to fetch (default: 1)")
-    wb.add_argument(
-        "--max",
-        type=int,
-        default=20,
-        metavar="N",
-        help="Max images to download (default: 20)",
-    )
-    wb.add_argument(
-        "--delay",
-        type=float,
-        default=0.35,
-        help="Seconds between HTTP requests (default: 0.35)",
-    )
-    wb.add_argument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        help="Verbose logging",
+        help="Подробный лог",
     )
     return p
 
@@ -96,42 +64,23 @@ def main(argv: list[str] | None = None) -> int:
 
     level = logging.DEBUG if getattr(args, "verbose", False) else logging.INFO
     logging.basicConfig(level=level, format="%(levelname)s %(message)s")
-    # Avoid megabytes of DEBUG from onnx/rembg when -v is used
-    for name in (
-        "onnxruntime",
-        "onnxruntime.capi",
-        "rembg",
-        "urllib3",
-        "numba",
-        "llvmlite",
-        "PIL",
-    ):
+    for name in ("httpcore", "httpx", "openai"):
         logging.getLogger(name).setLevel(logging.WARNING)
 
     if args.command == "process":
+
         def _log_ok(src: Path, dst: Path) -> None:
             logging.info("OK %s -> %s", src, dst)
 
-        ok, fail = process_directory(
+        ok, fail = process_directory_remote(
             args.input_dir,
             args.output_dir,
-            min_long_edge=args.min_long_edge,
-            white_bg=args.white_bg,
+            brief=args.brief,
+            fixed_instruction=args.instruction,
             on_file=_log_ok,
         )
-        logging.info("Done: %d ok, %d failed", ok, fail)
+        logging.info("Готово: %d ок, %d ошибок", ok, fail)
         return 1 if fail and ok == 0 else (0 if fail == 0 else 2)
-
-    if args.command == "wb-download":
-        saved, err = download_query_to_folder(
-            args.query,
-            args.out,
-            pages=args.pages,
-            max_items=args.max,
-            delay_s=args.delay,
-        )
-        logging.info("WB download: saved %s, errors/skips %s", saved, err)
-        return 1 if saved == 0 and err > 0 else 0
 
     return 0
 
