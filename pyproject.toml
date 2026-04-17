@@ -5,20 +5,25 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "cardgen"
 version = "0.1.0"
-description = "CLI: improve marketplace product photos"
+description = "Cardgen: CLI + web UI, RouterAI (GPT + Nano Banana)"
 readme = "PLAN.md"
 requires-python = ">=3.10"
 dependencies = [
-    "numpy>=1.24,<3",
-    "opencv-python-headless>=4.8,<5",
-    "Pillow>=10,<12",
-    "rembg>=2.0,<3",
-    "onnxruntime>=1.16,<2",
+    "openai>=1.40,<2",
+    "python-dotenv>=1.0,<2",
+    "fastapi>=0.115,<1",
+    "uvicorn[standard]>=0.32,<1",
+    "python-multipart>=0.0.9,<1",
+    "jinja2>=3.1,<4",
 ]
 
 [project.scripts]
 cardgen = "cardgen.cli:main"
+cardgen-serve = "cardgen.web.app:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["cardgen*"]
+
+[tool.setuptools.package-data]
+cardgen = ["web/templates/*.html", "web/static/*"]
