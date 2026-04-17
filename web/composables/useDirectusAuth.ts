@@ -29,40 +29,6 @@ function parseError(error: unknown): ApiError {
   return { message: fallback, raw: error };
 }
 
-/** Pathname из заголовка Location (абсолютный URL или относительный путь). */
-function pathnameFromRedirectLocation(locationHeader: string): string {
-  const raw = locationHeader.trim();
-  if (!raw) return "";
-  if (/^[a-z][a-z0-9+.-]*:/i.test(raw)) {
-    try {
-      return new URL(raw).pathname;
-    } catch {
-      return "";
-    }
-  }
-  return raw.split(/[?#]/, 1)[0] || "";
-}
-
-/**
- * Успешная верификация: редирект на пользователя в админке, напр. /admin/users/3cc0057c-6ce6-...
- * Иначе логин / ошибка.
- */
-function verifyEmailRedirectResult(locationHeader: string): "success" | "invalid" | "error" {
-  const loc = locationHeader.trim();
-  if (!loc) return "error";
-
-  const pathOnly = pathnameFromRedirectLocation(loc);
-  const p = pathOnly.startsWith("/") ? pathOnly : `/${pathOnly}`;
-
-  if (/\/admin\/users\/[^/\s?#]+/.test(p)) {
-    return "success";
-  }
-  if (loc.includes("/admin/login") || loc.toLowerCase().includes("login")) {
-    return "invalid";
-  }
-  return "error";
-}
-
 export function useDirectusAuth() {
   const config = useRuntimeConfig();
   const base = config.public.directusBase;
@@ -137,8 +103,8 @@ export function useDirectusAuth() {
   }
 
   /**
-   * Directus отвечает на GET /users/register/verify-email редиректом 302 на /admin/users/:id.
-   * Не следуем редиректу — остаёмся в Nuxt и интерпретируем Location.
+   * Проверка через GET /api/verify-registration на Nitro: там читается Location от Directus
+   * (в браузере при redirect:manual заголовок часто недоступен).
    */
   async function verifyRegistrationEmail(token: string): Promise<
     "success" | "invalid" | "error"
@@ -147,17 +113,13 @@ export function useDirectusAuth() {
       return "invalid";
     }
     try {
-      const url = `${base}/users/register/verify-email?token=${encodeURIComponent(token.trim())}`;
-      const res = await fetch(url, {
-        method: "GET",
-        redirect: "manual",
-        credentials: "omit",
-      });
-      if ([301, 302, 303, 307, 308].includes(res.status)) {
-        const loc = res.headers.get("Location") || "";
-        return verifyEmailRedirectResult(loc);
-      }
-      return "error";
+      const data = await $fetch<{ result: "success" | "invalid" | "error" }>(
+        "/api/verify-registration",
+        {
+          query: { token: token.trim() },
+        },
+      );
+      return data.result ?? "error";
     } catch {
       return "error";
     }

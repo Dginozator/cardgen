@@ -14,6 +14,8 @@ This branch is prepared for a Dokploy deployment from Git repository.
 
 Real upstream hostnames are kept in environment variables and are not exposed in frontend code.
 
+The **nuxt** container must also receive **`DIRECTUS_UPSTREAM`** (same URL as nginx uses for Directus). Nitro serves **`GET /api/verify-registration`** and calls Directus from Node so the `Location` header is visible (browser `fetch` with `redirect: manual` often hides it for cross-origin redirects).
+
 ## Dokploy setup
 
 1. Create a new project in Dokploy from this repository.
