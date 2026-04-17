@@ -4,14 +4,14 @@ const config = useRuntimeConfig();
 
 <template>
   <main class="container">
-    <h1>Cardgen Auth Flows (SPA)</h1>
+    <h1>Сценарии авторизации Cardgen (SPA)</h1>
     <p>
-      Frontend works as a single-page app and calls Directus auth endpoints
-      through hidden proxy routes.
+      Приложение работает как SPA: переходы и отправка форм выполняются без
+      перезагрузки страницы, а запросы идут через скрытые proxy-маршруты.
     </p>
 
     <section>
-      <h2>Public API prefixes</h2>
+      <h2>Публичные префиксы API</h2>
       <ul>
         <li>Directus: <code>{{ config.public.directusBase }}/...</code></li>
         <li>n8n: <code>{{ config.public.n8nBase }}/...</code></li>
@@ -19,14 +19,12 @@ const config = useRuntimeConfig();
     </section>
 
     <section>
-      <h2>Auth scenarios</h2>
+      <h2>Сценарии</h2>
       <ul>
-        <li><NuxtLink to="/register">Registration</NuxtLink></li>
-        <li><NuxtLink to="/login">Authorization</NuxtLink></li>
-        <li><NuxtLink to="/forgot-password">Reset request</NuxtLink></li>
-        <li>
-          <NuxtLink to="/reset-password">Password reset by token</NuxtLink>
-        </li>
+        <li><NuxtLink to="/register">Регистрация</NuxtLink></li>
+        <li><NuxtLink to="/login">Вход</NuxtLink></li>
+        <li><NuxtLink to="/forgot-password">Запрос сброса пароля</NuxtLink></li>
+        <li><NuxtLink to="/reset-password">Установка нового пароля</NuxtLink></li>
       </ul>
     </section>
   </main>

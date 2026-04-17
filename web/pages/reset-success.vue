@@ -1,8 +1,8 @@
 <template>
   <main class="done-page">
-    <h1>Password updated</h1>
-    <p>Your password was successfully reset.</p>
-    <NuxtLink class="btn" to="/login">Go to login</NuxtLink>
+    <h1>Пароль обновлен</h1>
+    <p>Пароль успешно изменен. Теперь вы можете войти в аккаунт.</p>
+    <NuxtLink class="btn" to="/login">Перейти ко входу</NuxtLink>
   </main>
 </template>
 
