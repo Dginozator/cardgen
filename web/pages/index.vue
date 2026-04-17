@@ -14,6 +14,14 @@ const config = useRuntimeConfig();
         <li>n8n: <code>{{ config.public.n8nBase }}/...</code></li>
       </ul>
     </section>
+
+    <section>
+      <h2>Аккаунт</h2>
+      <p>
+        <NuxtLink to="/account">Управление аккаунтом</NuxtLink>
+        — вход и удаление аккаунта.
+      </p>
+    </section>
   </main>
 </template>
 
