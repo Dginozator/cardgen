@@ -38,11 +38,26 @@ export function useDirectusAuth() {
       ? `${window.location.origin}/reset-password`
       : "/reset-password");
 
+  function verificationPageUrl() {
+    const configured = config.public.directusVerifyUrl as string;
+    if (configured) {
+      return configured.replace(/\/$/, "");
+    }
+    if (typeof window !== "undefined") {
+      return `${window.location.origin}/verify-email`;
+    }
+    return "http://localhost:8080/verify-email";
+  }
+
   async function register(email: string, password: string) {
     try {
       return await $fetch(`${base}/users/register`, {
         method: "POST",
-        body: { email, password },
+        body: {
+          email,
+          password,
+          verification_url: verificationPageUrl(),
+        },
       });
     } catch (error) {
       throw parseError(error);
@@ -85,10 +100,44 @@ export function useDirectusAuth() {
     }
   }
 
+  /**
+   * Directus отвечает на GET /users/register/verify-email редиректом 302 на /admin/users/:id.
+   * Не следуем редиректу — остаёмся в Nuxt и интерпретируем Location.
+   */
+  async function verifyRegistrationEmail(token: string): Promise<
+    "success" | "invalid" | "error"
+  > {
+    if (!token?.trim()) {
+      return "invalid";
+    }
+    try {
+      const url = `${base}/users/register/verify-email?token=${encodeURIComponent(token.trim())}`;
+      const res = await fetch(url, {
+        method: "GET",
+        redirect: "manual",
+        credentials: "omit",
+      });
+      if ([301, 302, 303, 307, 308].includes(res.status)) {
+        const loc = res.headers.get("Location") || "";
+        if (loc.includes("/admin/users/")) {
+          return "success";
+        }
+        if (loc.includes("/admin/login") || loc.toLowerCase().includes("login")) {
+          return "invalid";
+        }
+        return "error";
+      }
+      return "error";
+    } catch {
+      return "error";
+    }
+  }
+
   return {
     register,
     login,
     requestPasswordReset,
     resetPassword,
+    verifyRegistrationEmail,
   };
 }
