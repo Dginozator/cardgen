@@ -12,7 +12,7 @@ type LoginResponse = {
 };
 
 function parseError(error: unknown): ApiError {
-  const fallback = "Request failed. Please try again.";
+  const fallback = "Не удалось выполнить запрос. Попробуйте позже.";
   if (error && typeof error === "object") {
     const maybe = error as {
       data?: { errors?: Array<{ message?: string }> };

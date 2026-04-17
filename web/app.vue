@@ -1,13 +1,36 @@
+<script setup lang="ts">
+const router = useRouter();
+const { user, isAuthenticated, loadToken, checkSession, clearSession } =
+  useAuthSession();
+
+onMounted(async () => {
+  loadToken();
+  await checkSession();
+});
+
+async function onLogout() {
+  clearSession();
+  await router.push("/login");
+}
+</script>
+
 <template>
   <div class="app-shell">
     <header class="top-nav">
-      <NuxtLink to="/">Cardgen Auth SPA</NuxtLink>
+      <NuxtLink to="/">Cardgen: авторизация</NuxtLink>
       <nav>
-        <NuxtLink to="/register">Register</NuxtLink>
-        <NuxtLink to="/login">Login</NuxtLink>
-        <NuxtLink to="/forgot-password">Forgot Password</NuxtLink>
+        <NuxtLink to="/register">Регистрация</NuxtLink>
+        <NuxtLink to="/login">Вход</NuxtLink>
+        <NuxtLink to="/forgot-password">Сброс пароля</NuxtLink>
+        <NuxtLink v-if="isAuthenticated" to="/profile">Профиль</NuxtLink>
+        <button v-if="isAuthenticated" type="button" class="logout" @click="onLogout">
+          Выйти
+        </button>
       </nav>
     </header>
+    <p v-if="isAuthenticated && user?.email" class="session-chip">
+      Сессия: {{ user.email }}
+    </p>
     <NuxtPage />
   </div>
 </template>
@@ -30,6 +53,7 @@
 .top-nav nav {
   display: flex;
   gap: 14px;
+  align-items: center;
 }
 
 a {
@@ -39,5 +63,19 @@ a {
 
 a.router-link-active {
   font-weight: 700;
+}
+
+.logout {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.session-chip {
+  margin: 10px 20px 0;
+  color: #4b5563;
+  font-size: 13px;
 }
 </style>

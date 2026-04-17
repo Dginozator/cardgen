@@ -21,8 +21,9 @@ async function onSubmit() {
   try {
     await resetPassword(token.value, password.value);
     router.push("/reset-success");
-  } catch (e) {
-    error.value = (e as { message?: string }).message || "Reset failed.";
+  } catch {
+    error.value =
+      "Не удалось обновить пароль. Проверьте ссылку или запросите сброс повторно.";
   } finally {
     loading.value = false;
   }
@@ -31,24 +32,24 @@ async function onSubmit() {
 
 <template>
   <main class="auth-page">
-    <h1>Set new password</h1>
+    <h1>Новый пароль</h1>
     <p class="hint">
-      Open this page from the link in email or paste your reset token manually.
+      Откройте страницу по ссылке из письма или вставьте токен сброса вручную.
     </p>
 
     <form @submit.prevent="onSubmit">
       <label>
-        Reset token
+        Токен сброса
         <input v-model="token" type="text" required />
       </label>
 
       <label>
-        New password
+        Новый пароль
         <input v-model="password" type="password" required minlength="8" />
       </label>
 
       <button :disabled="loading" type="submit">
-        {{ loading ? "Updating..." : "Update password" }}
+        {{ loading ? "Обновление..." : "Обновить пароль" }}
       </button>
     </form>
 

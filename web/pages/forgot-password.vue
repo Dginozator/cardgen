@@ -13,10 +13,9 @@ async function onSubmit() {
   try {
     await requestPasswordReset(email.value);
     success.value =
-      "Reset link requested. Check your email inbox and open the link.";
-  } catch (e) {
-    error.value =
-      (e as { message?: string }).message || "Failed to request password reset.";
+      "Если аккаунт с таким email существует, мы отправили письмо для сброса пароля.";
+  } catch {
+    error.value = "Не удалось обработать запрос. Попробуйте позже.";
   } finally {
     loading.value = false;
   }
@@ -25,8 +24,8 @@ async function onSubmit() {
 
 <template>
   <main class="auth-page">
-    <h1>Reset password</h1>
-    <p class="hint">Request a password reset link from Directus.</p>
+    <h1>Сброс пароля</h1>
+    <p class="hint">Запросите ссылку для сброса пароля.</p>
     <form @submit.prevent="onSubmit">
       <label>
         Email
@@ -34,7 +33,7 @@ async function onSubmit() {
       </label>
 
       <button :disabled="loading" type="submit">
-        {{ loading ? "Requesting..." : "Send reset link" }}
+        {{ loading ? "Отправка..." : "Отправить ссылку" }}
       </button>
     </form>
 

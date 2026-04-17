@@ -14,12 +14,13 @@ async function onSubmit() {
   loading.value = true;
   try {
     await register(email.value, password.value);
-    success.value = "Account created. You can sign in now.";
+    success.value =
+      "Если регистрация доступна для этого адреса, вы получите письмо с дальнейшими шагами.";
     setTimeout(() => {
       router.push("/login");
     }, 700);
-  } catch (e) {
-    error.value = (e as { message?: string }).message || "Registration failed.";
+  } catch {
+    error.value = "Не удалось обработать запрос. Попробуйте позже.";
   } finally {
     loading.value = false;
   }
@@ -28,7 +29,7 @@ async function onSubmit() {
 
 <template>
   <main class="auth-page">
-    <h1>Registration</h1>
+    <h1>Регистрация</h1>
     <form @submit.prevent="onSubmit">
       <label>
         Email
@@ -36,7 +37,7 @@ async function onSubmit() {
       </label>
 
       <label>
-        Password
+        Пароль
         <input
           v-model="password"
           type="password"
@@ -47,7 +48,7 @@ async function onSubmit() {
       </label>
 
       <button :disabled="loading" type="submit">
-        {{ loading ? "Creating..." : "Create account" }}
+        {{ loading ? "Отправка..." : "Зарегистрироваться" }}
       </button>
     </form>
 

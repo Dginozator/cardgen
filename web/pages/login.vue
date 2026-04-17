@@ -1,5 +1,7 @@
 <script setup lang="ts">
 const { login } = useDirectusAuth();
+const router = useRouter();
+const { saveToken, checkSession } = useAuthSession();
 
 const email = ref("");
 const password = ref("");
@@ -15,10 +17,14 @@ async function onSubmit() {
     const response = await login(email.value, password.value);
     token.value = response?.data?.access_token || "";
     if (!token.value) {
-      error.value = "Login succeeded, but token was not returned.";
+      error.value = "Не удалось выполнить вход. Попробуйте позже.";
+      return;
     }
-  } catch (e) {
-    error.value = (e as { message?: string }).message || "Authorization failed.";
+    saveToken(token.value);
+    await checkSession();
+    await router.push("/profile");
+  } catch {
+    error.value = "Неверный email или пароль.";
   } finally {
     loading.value = false;
   }
@@ -27,7 +33,7 @@ async function onSubmit() {
 
 <template>
   <main class="auth-page">
-    <h1>Authorization</h1>
+    <h1>Вход</h1>
     <form @submit.prevent="onSubmit">
       <label>
         Email
@@ -35,7 +41,7 @@ async function onSubmit() {
       </label>
 
       <label>
-        Password
+        Пароль
         <input
           v-model="password"
           type="password"
@@ -45,18 +51,18 @@ async function onSubmit() {
       </label>
 
       <button :disabled="loading" type="submit">
-        {{ loading ? "Signing in..." : "Sign in" }}
+        {{ loading ? "Выполняем вход..." : "Войти" }}
       </button>
     </form>
 
     <p v-if="error" class="err">{{ error }}</p>
-    <p v-if="token" class="ok">Access token received.</p>
+    <p v-if="token" class="ok">Вход выполнен, токен сохранен.</p>
     <textarea
       v-if="token"
       class="token-box"
       readonly
       :value="token"
-      aria-label="Access token"
+      aria-label="Токен доступа"
     />
   </main>
 </template>
