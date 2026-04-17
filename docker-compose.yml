@@ -19,8 +19,8 @@ services:
       APP_DOMAIN: ${APP_DOMAIN:-app.example.com}
       DIRECTUS_UPSTREAM: ${DIRECTUS_UPSTREAM}
       N8N_UPSTREAM: ${N8N_UPSTREAM}
-    ports:
-      - "${APP_PORT:-8080}:80"
+    expose:
+      - "80"
     depends_on:
       - nuxt
     restart: unless-stopped

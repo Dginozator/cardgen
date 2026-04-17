@@ -19,7 +19,7 @@ Real upstream hostnames are kept in environment variables and are not exposed in
 1. Create a new project in Dokploy from this repository.
 2. Select Compose deployment and use `docker-compose.yml`.
 3. Set environment variables from `.env.example`.
-4. Attach your domain to the service and enable TLS.
+4. Publish the `nginx` service through Dokploy built-in reverse proxy and bind your domain.
 5. Deploy.
 
 ## Required variables
@@ -30,7 +30,6 @@ Real upstream hostnames are kept in environment variables and are not exposed in
 
 ## Optional variables
 
-- `APP_PORT` (default `8080`)
 - `NUXT_PUBLIC_API_BASE` (default `/api`)
 - `NUXT_PUBLIC_DIRECTUS_BASE` (default `/api/d`)
 - `NUXT_PUBLIC_N8N_BASE` (default `/api/n`)
@@ -43,3 +42,5 @@ docker compose up --build
 ```
 
 Open `http://localhost:8080`.
+
+For Dokploy production deployment, no host port mapping is required in Compose.
