@@ -1,13 +1,22 @@
 <script setup lang="ts">
 const { login } = useDirectusAuth();
 const router = useRouter();
-const { saveToken, checkSession } = useAuthSession();
+const { token: sessionToken, saveToken, loadToken, checkSession } = useAuthSession();
 
 const email = ref("");
 const password = ref("");
 const loading = ref(false);
 const error = ref("");
 const token = ref("");
+
+onMounted(async () => {
+  loadToken();
+  if (!sessionToken.value) return;
+  const ok = await checkSession();
+  if (ok) {
+    await router.push("/profile");
+  }
+});
 
 async function onSubmit() {
   error.value = "";
