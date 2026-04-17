@@ -38,17 +38,22 @@ export function useDirectusAuth() {
       ? `${window.location.origin}/reset-password`
       : "/reset-password");
 
+  function registrationVerificationUrl(): string {
+    if (typeof window !== "undefined" && window.location?.origin) {
+      return `${window.location.origin}/verify-email`;
+    }
+    return "http://localhost:8080/verify-email";
+  }
+
   async function register(email: string, password: string) {
     try {
-      const verifyUrl = (config.public.directusVerifyUrl as string)?.trim();
-      const body: Record<string, string> = { email, password };
-      // Иначе Directus проверяет URL по USER_REGISTER_URL_ALLOW_LIST и отдаёт 400.
-      if (verifyUrl) {
-        body.verification_url = verifyUrl.replace(/\/$/, "");
-      }
       return await $fetch(`${base}/users/register`, {
         method: "POST",
-        body,
+        body: {
+          email,
+          password,
+          verification_url: registrationVerificationUrl(),
+        },
       });
     } catch (error) {
       throw parseError(error);
