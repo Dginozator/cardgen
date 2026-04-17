@@ -35,7 +35,6 @@ async function onLogout() {
 
     <section v-else-if="!accessDenied" class="card">
       <p><strong>Email:</strong> {{ user?.email || "—" }}</p>
-      <p><strong>ID:</strong> {{ user?.id || "—" }}</p>
       <p>
         <strong>Имя:</strong>
         {{ [user?.first_name, user?.last_name].filter(Boolean).join(" ") || "—" }}
