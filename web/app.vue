@@ -19,9 +19,11 @@ async function onLogout() {
     <header class="top-nav">
       <NuxtLink to="/">Cardgen: авторизация</NuxtLink>
       <nav>
-        <NuxtLink to="/register">Регистрация</NuxtLink>
-        <NuxtLink to="/login">Вход</NuxtLink>
-        <NuxtLink to="/forgot-password">Сброс пароля</NuxtLink>
+        <template v-if="!isAuthenticated">
+          <NuxtLink to="/register">Регистрация</NuxtLink>
+          <NuxtLink to="/login">Вход</NuxtLink>
+          <NuxtLink to="/forgot-password">Сброс пароля</NuxtLink>
+        </template>
         <NuxtLink v-if="isAuthenticated" to="/profile">Профиль</NuxtLink>
         <button v-if="isAuthenticated" type="button" class="logout" @click="onLogout">
           Выйти
