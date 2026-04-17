@@ -37,17 +37,12 @@ export function useDirectusAuth() {
     (typeof window !== "undefined"
       ? `${window.location.origin}/reset-password`
       : "/reset-password");
-  const verifyUrl =
-    config.public.directusVerifyUrl ||
-    (typeof window !== "undefined"
-      ? `${window.location.origin}/verify-email`
-      : "/verify-email");
 
   async function register(email: string, password: string) {
     try {
       return await $fetch(`${base}/users/register`, {
         method: "POST",
-        body: { email, password, verification_url: verifyUrl },
+        body: { email, password },
       });
     } catch (error) {
       throw parseError(error);
