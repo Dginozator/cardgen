@@ -1,40 +1,22 @@
-/** Pathname из заголовка Location (абсолютный URL или относительный путь). */
-export function pathnameFromRedirectLocation(locationHeader: string): string {
-  const raw = locationHeader.trim();
-  if (!raw) return "";
-  if (/^[a-z][a-z0-9+.-]*:/i.test(raw)) {
-    try {
-      return new URL(raw).pathname;
-    } catch {
-      return "";
-    }
-  }
-  return raw.split(/[?#]/, 1)[0] || "";
-}
-
 /**
- * Успешная верификация: Location ведёт на /admin/users/:id
- * (см. Directus GET /users/register/verify-email → 302).
+ * Успех: редирект на пользователя в админке Directus (/admin/users/:id).
+ * Проверяем всю строку Location (относительный путь или полный URL).
  */
 export function verifyEmailRedirectResult(locationHeader: string):
   | "success"
   | "invalid"
   | "error" {
-  const loc = locationHeader.trim();
+  const loc = locationHeader
+    .trim()
+    .replace(/^["']+|["']+$/g, "");
   if (!loc) return "error";
 
-  const pathOnly = pathnameFromRedirectLocation(loc);
-  const p = pathOnly.startsWith("/") ? pathOnly : `/${pathOnly}`;
-
-  if (/\/admin\/users\/[^/\s?#]+/.test(p)) {
+  if (/\/admin\/users\/[^/\s?#]+/.test(loc)) {
     return "success";
   }
 
-  const pl = p.toLowerCase();
-  if (
-    pl.includes("/admin/login") ||
-    /\/login(?:\/|\?|#|$)/.test(pl)
-  ) {
+  const low = loc.toLowerCase();
+  if (low.includes("/admin/login") || /\/login(?:\/|\?|#|$)/.test(low)) {
     return "invalid";
   }
   return "error";
