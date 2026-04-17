@@ -7,11 +7,11 @@ set -eu
 # Wait for Nuxt app DNS and HTTP endpoint to be reachable before nginx starts.
 # This avoids boot-time race conditions in orchestrated environments.
 i=0
-until wget -q -T 2 -t 1 -O- "http://nuxt:3000/" >/dev/null 2>&1; do
+until wget -q -T 2 -t 1 -O- "http://webapp:3000/" >/dev/null 2>&1; do
   i=$((i + 1))
-  echo "waiting for nuxt upstream (${i}/60): http://nuxt:3000/"
+  echo "waiting for nuxt upstream (${i}/60): http://webapp:3000/"
   if [ "$i" -ge 60 ]; then
-    echo "nuxt upstream is not reachable after 60s: http://nuxt:3000/"
+    echo "nuxt upstream is not reachable after 60s: http://webapp:3000/"
     exit 1
   fi
   sleep 1
