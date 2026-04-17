@@ -16,7 +16,6 @@ services:
       context: ./nginx
       dockerfile: Dockerfile
     environment:
-      APP_DOMAIN: ${APP_DOMAIN:-app.example.com}
       DIRECTUS_UPSTREAM: ${DIRECTUS_UPSTREAM}
       N8N_UPSTREAM: ${N8N_UPSTREAM}
     expose:

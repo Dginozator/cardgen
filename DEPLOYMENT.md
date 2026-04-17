@@ -24,7 +24,6 @@ Real upstream hostnames are kept in environment variables and are not exposed in
 
 ## Required variables
 
-- `APP_DOMAIN`
 - `DIRECTUS_UPSTREAM`
 - `N8N_UPSTREAM`
 
