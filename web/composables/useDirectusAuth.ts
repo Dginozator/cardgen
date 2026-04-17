@@ -39,6 +39,12 @@ export function useDirectusAuth() {
       : "/reset-password");
 
   function registrationVerificationUrl(): string {
+    const configured = (
+      config.public.directusVerifyUrl as string | undefined
+    )?.trim();
+    if (configured) {
+      return configured.replace(/\/$/, "");
+    }
     if (typeof window !== "undefined" && window.location?.origin) {
       return `${window.location.origin}/verify-email`;
     }
