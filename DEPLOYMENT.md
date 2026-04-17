@@ -33,13 +33,10 @@ Real upstream hostnames are kept in environment variables and are not exposed in
 - `NUXT_PUBLIC_DIRECTUS_BASE` (default `/api/d`)
 - `NUXT_PUBLIC_N8N_BASE` (default `/api/n`)
 - `NUXT_PUBLIC_DIRECTUS_RESET_URL` (default `<current-origin>/reset-password`)
-- `NUXT_PUBLIC_DIRECTUS_VERIFY_URL` (default `<current-origin>/verify-email`)
 
-### Directus registration email (optional)
+### Directus registration email
 
-`verification_url` is sent **only if** `NUXT_PUBLIC_DIRECTUS_VERIFY_URL` is set. Without it, `POST /users/register` is just email + password (no allow-list check on that field).
-
-When you set it, Directus **`USER_REGISTER_URL_ALLOW_LIST`** must include that exact URL (e.g. `https://wb.dginozator.com/verify-email`).
+Registration always sends `verification_url` as `<current-browser-origin>/verify-email` (no extra frontend env). Directus **`USER_REGISTER_URL_ALLOW_LIST`** must include every origin you use in production, e.g. `https://wb.dginozator.com/verify-email`.
 
 **`PUBLIC_URL` on the Directus server** should match where **admins** open Directus. End users complete verification from Nuxt via `GET /users/register/verify-email` through `/api/d`.
 
