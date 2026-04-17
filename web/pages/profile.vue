@@ -39,7 +39,10 @@ async function onLogout() {
         <strong>Имя:</strong>
         {{ [user?.first_name, user?.last_name].filter(Boolean).join(" ") || "—" }}
       </p>
-      <button type="button" @click="onLogout">Выйти</button>
+      <div class="actions">
+        <button type="button" @click="onLogout">Выйти</button>
+        <NuxtLink to="/account" class="link">Удалить аккаунт</NuxtLink>
+      </div>
     </section>
 
     <section v-else class="card">
@@ -69,5 +72,22 @@ button {
   background: #111827;
   color: #fff;
   cursor: pointer;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.link {
+  color: #b91c1c;
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
 }
 </style>
