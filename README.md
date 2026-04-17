@@ -1,57 +1,40 @@
-# Cardgen
+# Cardgen - directus_gen
 
-Cardgen is a Python toolkit for generating visual cards with AI.  
-It combines a CLI workflow, a lightweight web interface, and a RouterAI layer to route requests across model providers.
+This branch is prepared as a deployable repository for Dokploy:
 
-## Why Cardgen
+- Nuxt frontend service
+- Nginx reverse proxy service
+- Hidden upstream routing:
+  - `/api/d/*` -> Directus
+  - `/api/n/*` -> n8n
 
-- Generate cards from prompts or prepared data.
-- Run locally as a CLI tool or as a small web app.
-- Keep model integration flexible through RouterAI.
-- Stay close to production with simple FastAPI-based serving.
+Public users only see your app domain (`app.example.com`) and internal API prefixes.
 
-## Tech Stack
+## Deploy model
 
-- Python 3.10+
-- FastAPI + Uvicorn
-- Jinja2 templates
-- OpenAI-compatible SDK integration
+- Frontend is served by Nuxt (`web/`).
+- Nginx is the public entrypoint and proxy layer.
+- Real upstream hosts are configured via environment variables only.
 
-## Quick Start
-
-### 1) Install dependencies
+## Quick start (local)
 
 ```bash
-pip install -r requirements.txt
+cp .env.example .env
+docker compose up --build
 ```
 
-### 2) Configure environment
+Open `http://localhost:8080`.
 
-Copy `.env.example` to `.env` and set API keys / model settings.
+## Dokploy
 
-### 3) Run web interface
+Use Compose deployment with `docker-compose.yml`, then set environment variables from `.env.example`.
 
-```bash
-cardgen-serve
-```
+Detailed steps: `DEPLOYMENT.md`.
 
-### 4) Use CLI
+## Branch content
 
-```bash
-cardgen --help
-```
-
-## Project Structure
-
-- `cardgen/` - core package, routing, CLI, and web app code
-- `data/` - local data files
-- `samples/` - sample inputs and outputs
-- `scripts/` - utility scripts
-
-## Roadmap
-
-The active backlog and implementation plans are maintained in `BACKLOG.md` and `PLAN.md`.
-
-## License
-
-If you plan to open-source this project, add a `LICENSE` file to define usage terms explicitly.
+- `web/` - Nuxt app skeleton
+- `nginx/` - reverse proxy config template
+- `docker-compose.yml` - deployment topology
+- `DEPLOYMENT.md` - operational setup guide
+- `info/`, `PLAN.md`, `BACKLOG.md`, `samples/` - product and research documents
