@@ -29,6 +29,40 @@ function parseError(error: unknown): ApiError {
   return { message: fallback, raw: error };
 }
 
+/** Pathname из заголовка Location (абсолютный URL или относительный путь). */
+function pathnameFromRedirectLocation(locationHeader: string): string {
+  const raw = locationHeader.trim();
+  if (!raw) return "";
+  if (/^[a-z][a-z0-9+.-]*:/i.test(raw)) {
+    try {
+      return new URL(raw).pathname;
+    } catch {
+      return "";
+    }
+  }
+  return raw.split(/[?#]/, 1)[0] || "";
+}
+
+/**
+ * Успешная верификация: редирект на пользователя в админке, напр. /admin/users/3cc0057c-6ce6-...
+ * Иначе логин / ошибка.
+ */
+function verifyEmailRedirectResult(locationHeader: string): "success" | "invalid" | "error" {
+  const loc = locationHeader.trim();
+  if (!loc) return "error";
+
+  const pathOnly = pathnameFromRedirectLocation(loc);
+  const p = pathOnly.startsWith("/") ? pathOnly : `/${pathOnly}`;
+
+  if (/\/admin\/users\/[^/\s?#]+/.test(p)) {
+    return "success";
+  }
+  if (loc.includes("/admin/login") || loc.toLowerCase().includes("login")) {
+    return "invalid";
+  }
+  return "error";
+}
+
 export function useDirectusAuth() {
   const config = useRuntimeConfig();
   const base = config.public.directusBase;
@@ -121,13 +155,7 @@ export function useDirectusAuth() {
       });
       if ([301, 302, 303, 307, 308].includes(res.status)) {
         const loc = res.headers.get("Location") || "";
-        if (loc.includes("/admin/users/")) {
-          return "success";
-        }
-        if (loc.includes("/admin/login") || loc.toLowerCase().includes("login")) {
-          return "invalid";
-        }
-        return "error";
+        return verifyEmailRedirectResult(loc);
       }
       return "error";
     } catch {
