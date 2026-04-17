@@ -18,7 +18,7 @@ onMounted(async () => {
   }
 });
 
-async function onSubmit() {
+async function submitRegistration() {
   success.value = "";
   error.value = "";
   loading.value = true;
@@ -26,14 +26,19 @@ async function onSubmit() {
     await register(email.value, password.value);
     success.value =
       "Если регистрация доступна для этого адреса, вы получите письмо с дальнейшими шагами.";
-    setTimeout(() => {
-      router.push("/login");
-    }, 700);
   } catch {
     error.value = "Не удалось обработать запрос. Попробуйте позже.";
   } finally {
     loading.value = false;
   }
+}
+
+async function onSubmit() {
+  await submitRegistration();
+}
+
+async function onResend() {
+  await submitRegistration();
 }
 </script>
 
@@ -63,6 +68,15 @@ async function onSubmit() {
     </form>
 
     <p v-if="success" class="ok">{{ success }}</p>
+    <button
+      v-if="success"
+      class="secondary"
+      :disabled="loading || !email || !password"
+      type="button"
+      @click="onResend"
+    >
+      {{ loading ? "Отправка..." : "Отправить письмо повторно" }}
+    </button>
     <p v-if="error" class="err">{{ error }}</p>
   </main>
 </template>
@@ -102,6 +116,14 @@ button {
 button:disabled {
   opacity: 0.65;
   cursor: wait;
+}
+
+.secondary {
+  margin-top: 8px;
+  width: 100%;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #111827;
 }
 
 .ok {
