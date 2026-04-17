@@ -191,6 +191,10 @@ def _guess_mime(path: Path) -> str:
 
 def _image_data_url(path: Path) -> str:
     raw = path.read_bytes()
+    if not raw:
+        raise ValueError(
+            f"Пустой файл изображения (0 байт), провайдер отвергнет запрос: {path}"
+        )
     b64 = base64.standard_b64encode(raw).decode("ascii")
     return f"data:{_guess_mime(path)};base64,{b64}"
 
@@ -653,6 +657,10 @@ def run_web_generate(
         logger.exception("pipeline[web] step=web_image_generate FAILED")
         raise
     logger.info("pipeline[web] step=web_image_generate OK bytes=%d", len(data))
+    if not data:
+        raise RuntimeError(
+            "Пустые байты результата генерации — ревью и повторная отправка в API невозможны."
+        )
 
     review = ""
     if with_review:
