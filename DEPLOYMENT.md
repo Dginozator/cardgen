@@ -41,6 +41,10 @@ Nitro **`GET /api/verify-registration`** calls Directus from Node so the `Locati
 
 Directus **`USER_REGISTER_URL_ALLOW_LIST`** must include the exact `verification_url` value your app sends (the canonical env URL in production, or the browser origin URL when the env is unset).
 
+### Directus password reset
+
+Directus **`PASSWORD_RESET_URL_ALLOW_LIST`** must include the exact `reset_url` your app sends in `POST /auth/password/request` (e.g. `https://wb.dginozator.com/reset-password` when using **`NUXT_PUBLIC_DIRECTUS_RESET_URL`** or the browser origin + `/reset-password`). Without this, Directus returns **Invalid payload … can't be used to reset passwords**.
+
 **`PUBLIC_URL` on the Directus server** should match where **admins** open Directus. End users complete verification from Nuxt via `GET /users/register/verify-email` through `/api/d`.
 
 ## Local smoke test

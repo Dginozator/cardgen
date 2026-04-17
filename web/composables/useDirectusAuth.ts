@@ -32,11 +32,20 @@ function parseError(error: unknown): ApiError {
 export function useDirectusAuth() {
   const config = useRuntimeConfig();
   const base = config.public.directusBase;
-  const redirectUrl =
-    config.public.directusResetUrl ||
-    (typeof window !== "undefined"
-      ? `${window.location.origin}/reset-password`
-      : "/reset-password");
+
+  /** Страница сброса пароля в Nuxt; в Directus должен быть в PASSWORD_RESET_URL_ALLOW_LIST. */
+  function passwordResetPageUrl(): string {
+    const configured = (
+      config.public.directusResetUrl as string | undefined
+    )?.trim();
+    if (configured) {
+      return configured.replace(/\/$/, "");
+    }
+    if (typeof window !== "undefined" && window.location?.origin) {
+      return `${window.location.origin}/reset-password`;
+    }
+    return "http://localhost:8080/reset-password";
+  }
 
   function registrationVerificationUrl(): string {
     const configured = (
@@ -83,7 +92,7 @@ export function useDirectusAuth() {
         method: "POST",
         body: {
           email,
-          reset_url: redirectUrl,
+          reset_url: passwordResetPageUrl(),
         },
       });
     } catch (error) {
