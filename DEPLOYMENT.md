@@ -32,6 +32,7 @@ Real upstream hostnames are kept in environment variables and are not exposed in
 - `NUXT_PUBLIC_API_BASE` (default `/api`)
 - `NUXT_PUBLIC_DIRECTUS_BASE` (default `/api/d`)
 - `NUXT_PUBLIC_N8N_BASE` (default `/api/n`)
+- `NUXT_PUBLIC_DIRECTUS_RESET_URL` (default `<current-origin>/reset-password`)
 
 ## Local smoke test
 
