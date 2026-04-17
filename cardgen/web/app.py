@@ -101,6 +101,11 @@ async def api_generate(
         return JSONResponse({"ok": False, "error": "Нужно загрузить изображение товара."}, status_code=400)
 
     prod_body = await product.read()
+    if not prod_body:
+        return JSONResponse(
+            {"ok": False, "error": "Файл товара пустой — выберите реальное изображение."},
+            status_code=400,
+        )
     if len(prod_body) > MAX_UPLOAD:
         return JSONResponse({"ok": False, "error": "Файл товара слишком большой (макс. 15 МБ)."}, status_code=400)
 
@@ -112,6 +117,11 @@ async def api_generate(
 
         if reference and reference.filename:
             ref_body = await reference.read()
+            if not ref_body:
+                return JSONResponse(
+                    {"ok": False, "error": "Файл референса пустой — уберите его или загрузите картинку."},
+                    status_code=400,
+                )
             if len(ref_body) > MAX_UPLOAD:
                 return JSONResponse(
                     {"ok": False, "error": "Файл референса слишком большой (макс. 15 МБ)."},
@@ -121,6 +131,11 @@ async def api_generate(
         elif reference_url and reference_url.strip():
             try:
                 ref_bytes = fetch_image_bytes_from_url(reference_url.strip())
+                if not ref_bytes:
+                    return JSONResponse(
+                        {"ok": False, "error": "По ссылке референса получен пустой файл."},
+                        status_code=400,
+                    )
                 if len(ref_bytes) > MAX_UPLOAD:
                     return JSONResponse(
                         {"ok": False, "error": "Картинка по ссылке слишком большая."},
