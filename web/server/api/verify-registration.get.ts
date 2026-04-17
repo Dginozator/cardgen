@@ -1,9 +1,24 @@
+import { getHeader, getRequestURL, type H3Event } from "h3";
 import { verifyEmailRedirectResult } from "../../utils/verifyEmailRedirect";
 
 /**
- * Серверный запрос к Directus: в браузере fetch+manual redirect часто не отдаёт Location
- * (opaqueredirect / абсолютный URL на другой host). Здесь заголовки читаются на Node.
+ * Публичный origin для fallback без DIRECTUS_UPSTREAM (запрос на тот же /api/d, что видит браузер).
  */
+function buildPublicOrigin(event: H3Event): string | null {
+  const xfProto = getHeader(event, "x-forwarded-proto")?.split(",")[0]?.trim();
+  const xfHost = getHeader(event, "x-forwarded-host")?.split(",")[0]?.trim();
+  const hostHeader = getHeader(event, "host")?.split(",")[0]?.trim();
+  const host = xfHost || hostHeader;
+  if (host && xfProto) {
+    return `${xfProto}://${host}`;
+  }
+  try {
+    return getRequestURL(event).origin;
+  } catch {
+    return null;
+  }
+}
+
 export default defineEventHandler(async (event) => {
   const q = getQuery(event);
   const raw = q.token;
@@ -12,20 +27,37 @@ export default defineEventHandler(async (event) => {
     return { result: "invalid" as const };
   }
 
+  const encoded = encodeURIComponent(token.trim());
+
   const upstream = String(process.env.DIRECTUS_UPSTREAM || "").replace(
     /\/$/,
     "",
   );
-  if (!upstream) {
+
+  const directusPrefix = String(
+    process.env.NUXT_PUBLIC_DIRECTUS_BASE || "/api/d",
+  ).replace(/\/$/, "");
+
+  let verifyUrl: string | null = null;
+
+  if (upstream) {
+    verifyUrl = `${upstream}/users/register/verify-email?token=${encoded}`;
+  } else {
+    const origin = buildPublicOrigin(event);
+    if (origin) {
+      verifyUrl = `${origin}${directusPrefix}/users/register/verify-email?token=${encoded}`;
+    }
+  }
+
+  if (!verifyUrl) {
     throw createError({
       statusCode: 503,
       statusMessage:
-        "DIRECTUS_UPSTREAM is not set on the server (needed for email verification).",
+        "Cannot resolve URL for email verification (set DIRECTUS_UPSTREAM or proxy headers).",
     });
   }
 
-  const url = `${upstream}/users/register/verify-email?token=${encodeURIComponent(token.trim())}`;
-  const res = await fetch(url, {
+  const res = await fetch(verifyUrl, {
     method: "GET",
     redirect: "manual",
   });
