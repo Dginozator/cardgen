@@ -22,6 +22,11 @@ const config = useRuntimeConfig();
       <h2>Сценарии</h2>
       <ul>
         <li><NuxtLink to="/register">Регистрация</NuxtLink></li>
+        <li>
+          Подтверждение email — ссылка из письма ведёт на
+          <code>/verify-email?token=...</code>
+        </li>
+        <li><NuxtLink to="/verify-success">Страница «Email подтверждён»</NuxtLink> (после успешной проверки)</li>
         <li><NuxtLink to="/login">Вход</NuxtLink></li>
         <li><NuxtLink to="/forgot-password">Запрос сброса пароля</NuxtLink></li>
         <li><NuxtLink to="/reset-password">Установка нового пароля</NuxtLink></li>
