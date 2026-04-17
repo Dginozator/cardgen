@@ -9,6 +9,10 @@ services:
       NUXT_PUBLIC_N8N_BASE: ${NUXT_PUBLIC_N8N_BASE:-/api/n}
       NITRO_HOST: 0.0.0.0
       NITRO_PORT: 3000
+    networks:
+      app_net:
+        aliases:
+          - webapp
     restart: unless-stopped
 
   nginx:
@@ -22,4 +26,10 @@ services:
       - "80"
     depends_on:
       - nuxt
+    networks:
+      - app_net
     restart: unless-stopped
+
+networks:
+  app_net:
+    driver: bridge
