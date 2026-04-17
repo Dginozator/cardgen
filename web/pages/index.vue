@@ -30,6 +30,7 @@ const config = useRuntimeConfig();
         <li><NuxtLink to="/login">Вход</NuxtLink></li>
         <li><NuxtLink to="/forgot-password">Запрос сброса пароля</NuxtLink></li>
         <li><NuxtLink to="/reset-password">Установка нового пароля</NuxtLink></li>
+        <li><NuxtLink to="/account">Управление аккаунтом (удаление)</NuxtLink></li>
       </ul>
     </section>
   </main>
