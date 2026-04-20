@@ -99,3 +99,16 @@ git log --graph --oneline --all --decorate -n 30
 Локальная обработка пикселей, скачивание превью с WB и т.п.
 
 Справочные материалы по нише — в `info/`.
+
+## Миграция схемы PostgreSQL (Directus)
+    коллекции
+    поля
+    relations
+    индексы
+    иногда permissions/policies, если включаешь их в процесс
+
+Это переносится через schema snapshot
+```directus schema snapshot ./directus/schema/current.yaml```
+Возможно применение через ```npx directus```
+
+```directus schema apply ./directus/schema/current.yaml```
