@@ -10,9 +10,9 @@ This branch is prepared as a deployable repository for Dokploy:
 
 Public users only see your app domain (`app.example.com`) and internal API prefixes.
 
-## Repository template (`template/v1.0.0`)
+## Шаблон нового репозитория (`template/v1.0.0`)
 
-Основная разработка ведётся в **`main`**. Чтобы создать новый репозиторий от зафиксированного снимка-шаблона (тег **`template/v1.0.0`**), клонируйте репозиторий и переключитесь на тег:
+**Основная ветка разработки — `directus_gen`.** Ветка `main` (и прочие) — побочные; **котируется только тег-лейбл** `template/v1.0.0`, если нужен зафиксированный снимок для нового репозитория:
 
 ```bash
 git clone https://github.com/Dginozator/cardgen.git
@@ -20,7 +20,7 @@ cd cardgen
 git checkout template/v1.0.0
 ```
 
-Тег указывает на конкретный коммит и не двигается при новых push в `main` — это удобная база для форков и новых проектов. Актуальный код приложения — в ветке **`main`**.
+Тег указывает на фиксированный коммит и не следует за `directus_gen`. Актуальный код — в **`directus_gen`**.
 
 ## Deploy model
 
