@@ -1,6 +1,6 @@
 # Cardgen (`directus_gen`)
 
-**Основная ветка разработки — `directus_gen`.** Остальные ветки (`main`, `extgen`, `rembg` и др.) — побочные: интеграция, старые версии, эксперименты; **котируется только тег-лейбл** ниже, если нужен зафиксированный снимок для нового репозитория.
+**Primary development branch: `directus_gen`.** Other branches (`main`, `extgen`, `rembg`, etc.) are secondary (integration, legacy, experiments). For a **pinned baseline** to start a new repository, use **only** the **`template/v1.0.0`** tag below.
 
 This branch is prepared as a deployable repository for Dokploy:
 
@@ -12,9 +12,9 @@ This branch is prepared as a deployable repository for Dokploy:
 
 Public users only see your app domain (`app.example.com`) and internal API prefixes.
 
-## Шаблон нового репозитория (`template/v1.0.0`)
+## New repository template (`template/v1.0.0`)
 
-Снимок для форков и новых проектов — **только** тег **`template/v1.0.0`**:
+For forks and new projects, use **only** the **`template/v1.0.0`** tag:
 
 ```bash
 git clone https://github.com/Dginozator/cardgen.git
@@ -22,7 +22,7 @@ cd cardgen
 git checkout template/v1.0.0
 ```
 
-Тег указывает на фиксированный коммит и не следует за `directus_gen`. Актуальный код — в ветке **`directus_gen`**.
+The tag points at a fixed commit and does not advance with `directus_gen`. Current product code lives on **`directus_gen`**.
 
 ## Deploy model
 
@@ -51,4 +51,4 @@ Detailed steps: `DEPLOYMENT.md`.
 - `nginx/` - reverse proxy config template
 - `docker-compose.yml` - deployment topology
 - `DEPLOYMENT.md` - operational setup guide
-- `PLAN.md`, `BACKLOG.md`, `samples/` - product and research documents (локальные заметки в `info/` не в репозитории — см. `.gitignore`)
+- `PLAN.md`, `BACKLOG.md`, `samples/` - product and research documents (local notes under `info/` are not versioned — see `.gitignore`)
