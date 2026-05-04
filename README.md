@@ -1,4 +1,4 @@
-# Cardgen - directus_gen
+# Cardgen
 
 This branch is prepared as a deployable repository for Dokploy:
 
@@ -9,6 +9,18 @@ This branch is prepared as a deployable repository for Dokploy:
   - `/api/n/*` -> n8n
 
 Public users only see your app domain (`app.example.com`) and internal API prefixes.
+
+## Repository template (`template/v1.0.0`)
+
+Основная разработка ведётся в **`main`**. Чтобы создать новый репозиторий от зафиксированного снимка-шаблона (тег **`template/v1.0.0`**), клонируйте репозиторий и переключитесь на тег:
+
+```bash
+git clone https://github.com/Dginozator/cardgen.git
+cd cardgen
+git checkout template/v1.0.0
+```
+
+Тег указывает на конкретный коммит и не двигается при новых push в `main` — это удобная база для форков и новых проектов. Актуальный код приложения — в ветке **`main`**.
 
 ## Deploy model
 
@@ -37,4 +49,4 @@ Detailed steps: `DEPLOYMENT.md`.
 - `nginx/` - reverse proxy config template
 - `docker-compose.yml` - deployment topology
 - `DEPLOYMENT.md` - operational setup guide
-- `info/`, `PLAN.md`, `BACKLOG.md`, `samples/` - product and research documents
+- `PLAN.md`, `BACKLOG.md`, `samples/` - product and research documents (локальные заметки в `info/` не в репозитории — см. `.gitignore`)
