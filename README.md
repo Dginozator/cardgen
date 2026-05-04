@@ -1,8 +1,8 @@
 # Cardgen (`extgen`)
 
-Эта ветка — **побочная**: старая экспериментальная линия (Python / ранний прототип).
+This branch is **secondary**: a legacy experimental line (Python / early prototype).
 
-**Основная ветка разработки — `directus_gen`.** Остальные ветки (`main`, `rembg` и др.) тоже побочные; **котируется только тег-лейбл** `template/v1.0.0`, если нужен зафиксированный снимок для нового репозитория:
+**Primary development branch: `directus_gen`.** Other branches (`main`, `rembg`, etc.) are also secondary. For a **pinned baseline** to start a new repository, use **only** the **`template/v1.0.0`** tag:
 
 ```bash
 git clone https://github.com/Dginozator/cardgen.git
@@ -10,4 +10,4 @@ cd cardgen
 git checkout template/v1.0.0
 ```
 
-Тег указывает на фиксированный коммит и не следует за `directus_gen`. Актуальный код — в **`directus_gen`**.
+The tag points at a fixed commit and does not advance with `directus_gen`. Current product code lives on **`directus_gen`**.
