@@ -488,13 +488,3 @@ function formatBytes(bytes: number): string {
   margin-top: 20px;
 }
 </style>
-</task_progress>
-- [x] Worker: compositor.py (Pillow layout renderer)
-- [x] Worker: pipeline, directus_client, routerai_client, main.py (FastAPI)
-- [x] Worker: Dockerfile, requirements.txt
-- [x] Docker Compose: worker service + nginx route
-- [ ] Directus schema via MCP (templates, generation_tasks collections + seed templates)
-- [x] Nuxt page /generate + composable useGeneration.ts
-- [ ] Integration testing
-</task_progress>
-</write_to_file>
