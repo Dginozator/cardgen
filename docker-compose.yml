@@ -45,8 +45,8 @@ services:
       DIRECTUS_UPSTREAM: ${DIRECTUS_UPSTREAM}
       N8N_UPSTREAM: ${N8N_UPSTREAM}
       WORKER_UPSTREAM: ${WORKER_UPSTREAM:-http://worker:8766}
-    ports:
-      - "${NGINX_PORT:-80}:80"
+    expose:
+      - "80"
     depends_on:
       - nuxt
       - worker
