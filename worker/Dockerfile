@@ -5,10 +5,10 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY . /app/worker/
 
 # Create fonts directory (fonts mounted or baked in at build time)
-RUN mkdir -p /app/fonts
+RUN mkdir -p /app/worker/fonts
 
 EXPOSE 8766
 
