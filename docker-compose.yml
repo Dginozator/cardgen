@@ -11,6 +11,8 @@ services:
       DIRECTUS_UPSTREAM: ${DIRECTUS_UPSTREAM:-}
       NITRO_HOST: 0.0.0.0
       NITRO_PORT: 3000
+    networks:
+      - app_net
     restart: unless-stopped
 
   worker:
@@ -27,6 +29,8 @@ services:
       WORKER_HOST: "0.0.0.0"
       WORKER_PORT: "8766"
       MAX_UPLOAD_MB: "10"
+    networks:
+      - app_net
     restart: unless-stopped
 
   nginx:
@@ -42,4 +46,10 @@ services:
     depends_on:
       - nuxt
       - worker
+    networks:
+      - app_net
     restart: unless-stopped
+
+networks:
+  app_net:
+    driver: bridge
