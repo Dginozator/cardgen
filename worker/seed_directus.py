@@ -115,9 +115,9 @@ INFOGRAPHIC_1_1 = {
 
 # ── API helpers ──────────────────────────────────────────────────────
 
-def api(method: str, path: str, *, json_data: dict | None = None) -> dict:
+def api(method: str, path: str, *, json_data: dict | None = None, params: dict | None = None) -> dict:
     url = f"{BASE_URL}{path}"
-    resp = httpx.request(method, url, headers=HEADERS, json=json_data, timeout=30)
+    resp = httpx.request(method, url, headers=HEADERS, json=json_data, params=params, timeout=30)
     if resp.status_code >= 400:
         print(f"  API {method} {path} → {resp.status_code}: {resp.text[:500]}")
         return {}
@@ -298,6 +298,74 @@ def create_tasks_collection() -> None:
     ], icon="assignment")
 
 
+# ── Permissions ──────────────────────────────────────────────────────
+
+def set_permissions() -> None:
+    """Grant read/write permissions for templates and generation_tasks to non-admin roles."""
+    roles = api("GET", "/roles")
+    if not roles:
+        print("  No roles found, skipping permissions.")
+        return
+
+    for role in roles:
+        role_id = role.get("id", "")
+        role_name = role.get("name", "")
+        # Skip admin role (it already has full access)
+        if role.get("admin_access") or role_name.lower() == "administrator":
+            continue
+
+        print(f"  Setting permissions for role '{role_name}' ({role_id})...")
+
+        # Templates: read
+        existing = api("GET", f"/permissions?filter[role][_eq]={role_id}&filter[collection][_eq]=templates&filter[action][_eq]=read")
+        if not existing:
+            api("POST", "/permissions", json_data={
+                "role": role_id,
+                "collection": "templates",
+                "action": "read",
+                "permissions": {},
+                "fields": ["*"],
+            })
+            print(f"    ✓ Added templates:read for {role_name}")
+        else:
+            print(f"    templates:read already exists for {role_name}")
+
+        # Generation tasks: read, create, update
+        for action in ["read", "create", "update"]:
+            existing = api("GET", f"/permissions?filter[role][_eq]={role_id}&filter[collection][_eq]=generation_tasks&filter[action][_eq]={action}")
+            if not existing:
+                api("POST", "/permissions", json_data={
+                    "role": role_id,
+                    "collection": "generation_tasks",
+                    "action": action,
+                    "permissions": {},
+                    "fields": ["*"],
+                })
+                print(f"    ✓ Added generation_tasks:{action} for {role_name}")
+            else:
+                print(f"    generation_tasks:{action} already exists for {role_name}")
+
+    # Also grant public/system access to directus_files for image uploads
+    # (users need to upload files via Directus)
+    for role in roles:
+        role_id = role.get("id", "")
+        role_name = role.get("name", "")
+        if role.get("admin_access") or role_name.lower() == "administrator":
+            continue
+
+        for action in ["read", "create"]:
+            existing = api("GET", f"/permissions?filter[role][_eq]={role_id}&filter[collection][_eq]=directus_files&filter[action][_eq]={action}")
+            if not existing:
+                api("POST", "/permissions", json_data={
+                    "role": role_id,
+                    "collection": "directus_files",
+                    "action": action,
+                    "permissions": {},
+                    "fields": ["*"],
+                })
+                print(f"    ✓ Added directus_files:{action} for {role_name}")
+
+
 # ── Seed templates ───────────────────────────────────────────────────
 
 SEED_TEMPLATES = [
@@ -364,6 +432,7 @@ def main() -> None:
     print("Seeding Directus schema...")
     create_templates_collection()
     create_tasks_collection()
+    set_permissions()
     seed_templates()
     print("Done!")
 
