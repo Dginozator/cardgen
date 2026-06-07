@@ -13,9 +13,10 @@ from fastapi import FastAPI, File, Form, Header, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from .config import MAX_UPLOAD_MB, WORKER_HOST, WORKER_PORT
+from .config import DIRECTUS_TOKEN, MAX_UPLOAD_MB, WORKER_HOST, WORKER_PORT
 from .directus_client import DirectusClient
 from .pipeline import run_generation
+from .seed_directus import auto_seed
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +60,7 @@ async def lifespan(app: FastAPI):
     for name in ("httpx", "openai", "httpcore", "urllib3"):
         logging.getLogger(name).setLevel(logging.WARNING)
     logger.info("worker started")
+    auto_seed()
     yield
     logger.info("worker shutting down")
 

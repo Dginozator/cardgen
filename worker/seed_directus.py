@@ -424,6 +424,22 @@ def seed_templates() -> None:
 
 # ── Main ─────────────────────────────────────────────────────────────
 
+def auto_seed() -> None:
+    """Auto-seed on worker startup: create collections, set permissions, seed templates."""
+    if not TOKEN:
+        print("  [seed] No DIRECTUS_TOKEN, skipping auto-seed.")
+        return
+    try:
+        print("[seed] Checking Directus schema...")
+        create_templates_collection()
+        create_tasks_collection()
+        set_permissions()
+        seed_templates()
+        print("[seed] Done.")
+    except Exception as e:
+        print(f"[seed] Error: {e}")
+
+
 def main() -> None:
     if not TOKEN:
         print("Error: DIRECTUS_TOKEN env var is required.")
