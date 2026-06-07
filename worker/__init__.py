@@ -1,0 +1,1 @@
+"""Cardgen worker — FastAPI service for infographic generation."""

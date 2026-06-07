@@ -24,6 +24,7 @@ async function onLogout() {
           <NuxtLink to="/login">Вход</NuxtLink>
           <NuxtLink to="/forgot-password">Сброс пароля</NuxtLink>
         </template>
+        <NuxtLink v-if="isAuthenticated" to="/generate">Генерация</NuxtLink>
         <NuxtLink v-if="isAuthenticated" to="/profile">Профиль</NuxtLink>
         <button v-if="isAuthenticated" type="button" class="logout" @click="onLogout">
           Выйти

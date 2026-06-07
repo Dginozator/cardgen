@@ -1,0 +1,2 @@
+# Drop Inter-Bold.ttf, Inter-Regular.ttf or other TTF fonts here.
+# Pillow falls back to ImageFont.load_default() if no fonts are present.

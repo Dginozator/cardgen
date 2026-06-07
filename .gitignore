@@ -1,6 +1,7 @@
 .env
 .env.local
 .venv/
+__pycache__/
 node_modules/
 .nuxt/
 .output/
@@ -8,6 +9,9 @@ dist/
 cardgen/
 cardgen.egg-info/
 data/
+
+# Test artifacts
+worker/tests/test_output.png
 
 # Local notes / planning (not versioned)
 info/
