@@ -40,8 +40,9 @@ server {
     }
 
     location /api/w/ {
+        set $worker_upstream ${WORKER_UPSTREAM};
         rewrite ^/api/w/(.*)$ /$1 break;
-        proxy_pass ${WORKER_UPSTREAM};
+        proxy_pass $worker_upstream;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-Proto $scheme;
