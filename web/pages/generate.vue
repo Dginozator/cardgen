@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { isAuthenticated } = useAuthSession();
+const { isAuthenticated, loadToken } = useAuthSession();
 const {
   templates,
   selectedTemplate,
@@ -33,8 +33,15 @@ const aspectLabel = computed(() => {
   return `${width}:${height}`;
 });
 
-// Lifecycle
-watch(isAuthenticated, (v) => { if (v) fetchTemplates(); }, { immediate: true });
+// Lifecycle — load token first, then fetch templates
+onMounted(async () => {
+  loadToken();
+  if (isAuthenticated.value) {
+    await fetchTemplates();
+  }
+});
+
+watch(isAuthenticated, (v) => { if (v) fetchTemplates(); });
 
 // Handlers
 function onFileChange(e: Event) {
@@ -70,11 +77,12 @@ async function onGenerate() {
   });
 }
 
-function startOver() {
+async function startOver() {
   reset();
   title.value = "";
   bullets.value = ["", "", ""];
   productFile.value = null;
+  await fetchTemplates();
 }
 
 function formatBytes(bytes: number): string {
