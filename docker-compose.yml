@@ -20,7 +20,7 @@ services:
       context: ./worker
       dockerfile: Dockerfile
     environment:
-      DIRECTUS_URL: ${DIRECTUS_URL:-http://directus:8055}
+      DIRECTUS_URL: ${DIRECTUS_URL:-https://directus.dginozator.com}
       DIRECTUS_TOKEN: ${DIRECTUS_TOKEN:-}
       ROUTERAI_API_KEY: ${ROUTERAI_API_KEY:-}
       ROUTERAI_BASE_URL: ${ROUTERAI_BASE_URL:-https://routerai.ru/api/v1}

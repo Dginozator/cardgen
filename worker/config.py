@@ -11,7 +11,7 @@ def _env(name: str, default: str = "") -> str:
 
 
 # Directus
-DIRECTUS_URL = _env("DIRECTUS_URL", "http://directus:8055")
+DIRECTUS_URL = _env("DIRECTUS_URL", "https://directus.dginozator.com")
 DIRECTUS_TOKEN = _env("DIRECTUS_TOKEN", "")  # static admin/service token
 
 # RouterAI
