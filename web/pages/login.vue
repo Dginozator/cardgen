@@ -31,7 +31,7 @@ async function onSubmit() {
     }
     saveToken(token.value);
     await checkSession();
-    await router.push("/profile");
+    await router.push("/");
   } catch {
     error.value = "Неверный email или пароль.";
   } finally {

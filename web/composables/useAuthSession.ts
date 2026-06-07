@@ -53,7 +53,8 @@ export function useAuthSession() {
       user.value = me?.data || null;
       return true;
     } catch {
-      clearSession();
+      // Don't clear token on failure — keep authenticated state
+      // User can still access protected pages; token will be validated on API calls
       return false;
     } finally {
       checking.value = false;
