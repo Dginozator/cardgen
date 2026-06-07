@@ -9,7 +9,7 @@ import uuid
 from contextlib import asynccontextmanager
 from typing import Any
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, Header, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -19,15 +19,24 @@ from .pipeline import run_generation
 
 logger = logging.getLogger(__name__)
 
-# Shared Directus client
+# Shared Directus client (for background tasks without user context)
 _directus: DirectusClient | None = None
 
 
-def _get_directus() -> DirectusClient:
+def _get_directus(token: str | None = None) -> DirectusClient:
+    """Return Directus client. If token provided, use it; otherwise fall back to static token."""
+    if token:
+        return DirectusClient(token=token)
     global _directus
     if _directus is None:
         _directus = DirectusClient()
     return _directus
+
+
+def _extract_token(authorization: str | None) -> str | None:
+    if authorization and authorization.lower().startswith("bearer "):
+        return authorization[7:].strip()
+    return None
 
 
 # Background task tracker
@@ -112,9 +121,10 @@ async def health():
 
 
 @app.get("/templates")
-async def list_templates() -> list[dict]:
+async def list_templates(authorization: str | None = Header(None)) -> list[dict]:
     """List active templates from Directus."""
-    d = _get_directus()
+    token = _extract_token(authorization)
+    d = _get_directus(token)
     try:
         templates = await d.get_templates(is_active=True)
         return templates
@@ -124,9 +134,10 @@ async def list_templates() -> list[dict]:
 
 
 @app.get("/templates/{template_id}")
-async def get_template(template_id: str) -> dict:
+async def get_template(template_id: str, authorization: str | None = Header(None)) -> dict:
     """Get a single template."""
-    d = _get_directus()
+    token = _extract_token(authorization)
+    d = _get_directus(token)
     try:
         return await d.get_template(template_id)
     except Exception as e:
@@ -139,6 +150,7 @@ async def generate(
     title: str = Form(""),
     bullets_json: str = Form("[]"),
     product_image: UploadFile = File(...),
+    authorization: str | None = Header(None),
 ) -> dict:
     """
     Start a generation task.
@@ -155,7 +167,8 @@ async def generate(
     if len(body) > MAX_UPLOAD_MB * 1024 * 1024:
         raise HTTPException(status_code=400, detail=f"Файл слишком большой (макс. {MAX_UPLOAD_MB} МБ).")
 
-    d = _get_directus()
+    user_token = _extract_token(authorization)
+    d = _get_directus(user_token)
 
     # Upload product image to Directus
     try:
