@@ -17,7 +17,7 @@ async function onLogout() {
 <template>
   <div class="app-shell">
     <header class="top-nav">
-      <NuxtLink to="/">Cardgen: авторизация</NuxtLink>
+      <NuxtLink to="/">Cardgen</NuxtLink>
       <nav>
         <template v-if="!isAuthenticated">
           <NuxtLink to="/register">Регистрация</NuxtLink>
