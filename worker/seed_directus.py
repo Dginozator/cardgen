@@ -261,8 +261,8 @@ def create_tasks_collection() -> None:
         },
         {
             "field": "template",
-            "type": "uuid",
-            "meta": {"interface": "select-dropdown-m2o", "special": ["m2o"], "options": {"template": "{{name}}"}},
+            "type": "integer",
+            "meta": {"interface": "select-dropdown-m2o", "special": ["m2o"], "options": {"template": "{{name}}"}} ,
             "schema": {"is_nullable": False, "foreign_key_table": "templates", "foreign_key_column": "id"},
         },
         {
@@ -315,6 +315,24 @@ def fix_tasks_sort_field() -> None:
             "meta": {**coll.get("meta", {}), "sort_field": None},
         })
         print("  ✓ Fixed.")
+
+
+def fix_tasks_template_type() -> None:
+    """Fix generation_tasks.template field: change from uuid to integer to match templates PK."""
+    if not collection_exists("generation_tasks"):
+        return
+    field = api("GET", "/fields/generation_tasks/template")
+    if field and field.get("type") == "uuid":
+        print("  Fixing generation_tasks.template type: uuid → integer...")
+        api("PATCH", "/fields/generation_tasks/template", json_data={
+            "type": "integer",
+            "schema": {
+                "is_nullable": False,
+                "foreign_key_table": "templates",
+                "foreign_key_column": "id",
+            },
+        })
+        print("  ✓ Fixed template field type.")
 
 
 # ── Permissions ──────────────────────────────────────────────────────
@@ -453,6 +471,7 @@ def auto_seed() -> None:
         create_templates_collection()
         create_tasks_collection()
         fix_tasks_sort_field()
+        fix_tasks_template_type()
         set_permissions()
         seed_templates()
         print("[seed] Done.")
