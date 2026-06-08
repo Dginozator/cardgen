@@ -194,7 +194,17 @@ async def generate(
         raise HTTPException(status_code=400, detail=f"Файл слишком большой (макс. {MAX_UPLOAD_MB} МБ).")
 
     user_token = _extract_token(authorization)
+
+    # Pick a working Directus token: user token → static token → none
     d = _get_directus(user_token)
+    try:
+        await d.get_templates(is_active=True)
+    except Exception:
+        if DIRECTUS_TOKEN:
+            logger.warning("generate: user token invalid, falling back to static token")
+            d = _get_directus(DIRECTUS_TOKEN)
+        else:
+            logger.warning("generate: user token invalid, no static token available")
 
     # Upload product image to Directus
     try:
