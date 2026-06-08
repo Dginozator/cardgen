@@ -38,6 +38,7 @@ const POLL_MAX_ATTEMPTS = 150; // 5 min
 export function useGeneration() {
   const config = useRuntimeConfig();
   const session = useAuthSession();
+  const { ensureFreshToken } = session;
   const base = (config.public.workerBase as string) || "/api/w";
 
   const templates = ref<Template[]>([]);
@@ -52,6 +53,7 @@ export function useGeneration() {
   async function fetchTemplates() {
     error.value = "";
     try {
+      await ensureFreshToken();
       const data = await $fetch<Template[]>(`${base}/templates`, {
         headers: { Authorization: `Bearer ${session.token.value}` },
       });
@@ -78,6 +80,7 @@ export function useGeneration() {
     loading.value = true;
 
     try {
+      await ensureFreshToken();
       const formData = new FormData();
       formData.append("template_id", selectedTemplate.value!.id);
       formData.append("title", opts.title);
@@ -138,6 +141,7 @@ export function useGeneration() {
     if (!task.result_image) return;
     const dBase = (config.public.directusBase as string) || "/api/d";
     try {
+      await ensureFreshToken();
       const resp = await fetch(`${dBase}/assets/${task.result_image}`, {
         headers: { Authorization: `Bearer ${session.token.value}` },
       });

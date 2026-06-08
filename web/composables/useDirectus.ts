@@ -34,12 +34,14 @@ function extractError(body: unknown, fallback: string): string {
 export function useDirectus() {
   const config = useRuntimeConfig();
   const session = useAuthSession();
+  const { ensureFreshToken } = session;
   const base = (config.public.directusBase as string) || "/api/d";
 
   async function request<T = unknown>(
     path: string,
     init: RequestInit = {},
   ): Promise<T> {
+    await ensureFreshToken();
     const headers = new Headers(init.headers || {});
     if (!headers.has("Content-Type") && init.body && !(init.body instanceof FormData)) {
       headers.set("Content-Type", "application/json");

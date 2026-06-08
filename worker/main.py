@@ -60,6 +60,12 @@ async def lifespan(app: FastAPI):
     for name in ("httpx", "openai", "httpcore", "urllib3"):
         logging.getLogger(name).setLevel(logging.WARNING)
     logger.info("worker started")
+    if not DIRECTUS_TOKEN:
+        logger.warning(
+            "DIRECTUS_TOKEN is not set — worker will have no service token "
+            "for Directus API calls. Template listing may fail for expired user tokens. "
+            "Set DIRECTUS_TOKEN in your .env file."
+        )
     auto_seed()
     yield
     logger.info("worker shutting down")
@@ -124,15 +130,33 @@ async def health():
 
 @app.get("/templates")
 async def list_templates(authorization: str | None = Header(None)) -> list[dict]:
-    """List active templates from Directus."""
+    """List active templates from Directus.
+
+    Tries in order: user token → static service token → no token (public access).
+    This ensures templates are returned even when the user token has expired.
+    """
     token = _extract_token(authorization)
-    d = _get_directus(token)
+
+    # 1. Try user token
+    if token:
+        try:
+            return await _get_directus(token).get_templates(is_active=True)
+        except Exception:
+            logger.warning("user token failed for templates, trying fallbacks")
+
+    # 2. Try static service token
+    if DIRECTUS_TOKEN:
+        try:
+            return await _get_directus(DIRECTUS_TOKEN).get_templates(is_active=True)
+        except Exception:
+            logger.warning("static token also failed for templates, trying public access")
+
+    # 3. Try without any token (public Directus access)
     try:
-        templates = await d.get_templates(is_active=True)
-        return templates
+        return await _get_directus(token=None).get_templates(is_active=True)
     except Exception as e:
-        logger.exception("failed to list templates")
-        raise HTTPException(status_code=502, detail=str(e)) from e
+        logger.exception("all token fallbacks failed for templates")
+        raise HTTPException(status_code=502, detail=f"Failed to list templates: {e}") from e
 
 
 @app.get("/templates/{template_id}")

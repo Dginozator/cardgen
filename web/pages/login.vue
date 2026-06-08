@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const { login } = useDirectusAuth();
 const router = useRouter();
-const { token: sessionToken, saveToken, loadToken, checkSession } = useAuthSession();
+const { token: sessionToken, saveToken, loadToken, checkSession, tryRefresh } = useAuthSession();
 
 const email = ref("");
 const password = ref("");
@@ -29,7 +29,11 @@ async function onSubmit() {
       error.value = "Не удалось выполнить вход. Попробуйте позже.";
       return;
     }
-    saveToken(token.value);
+    saveToken(
+      token.value,
+      response?.data?.refresh_token,
+      response?.data?.expires,
+    );
     await checkSession();
     await router.push("/");
   } catch {
