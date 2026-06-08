@@ -130,7 +130,7 @@ def collection_exists(name: str) -> bool:
     return bool(resp)
 
 
-def create_collection(name: str, fields: list[dict], *, icon: str = "box") -> None:
+def create_collection(name: str, fields: list[dict], *, icon: str = "box", sort_field: str | None = "sort") -> None:
     if collection_exists(name):
         print(f"  Collection '{name}' already exists, skipping.")
         return
@@ -142,7 +142,7 @@ def create_collection(name: str, fields: list[dict], *, icon: str = "box") -> No
             "display_template": None,
             "hidden": False,
             "singleton": False,
-            "sort_field": "sort",
+            "sort_field": sort_field,
         },
         "schema": {},
     })
@@ -301,7 +301,20 @@ def create_tasks_collection() -> None:
             "meta": {"interface": "datetime", "special": ["date-updated"], "readonly": True},
             "schema": {"is_nullable": True},
         },
-    ], icon="assignment")
+    ], icon="assignment", sort_field=None)
+
+
+def fix_tasks_sort_field() -> None:
+    """Fix generation_tasks collection: remove sort_field if collection already exists."""
+    if not collection_exists("generation_tasks"):
+        return
+    coll = api("GET", "/collections/generation_tasks")
+    if coll and coll.get("meta", {}).get("sort_field") == "sort":
+        print("  Fixing generation_tasks sort_field → null...")
+        api("PATCH", "/collections/generation_tasks", json_data={
+            "meta": {**coll.get("meta", {}), "sort_field": None},
+        })
+        print("  ✓ Fixed.")
 
 
 # ── Permissions ──────────────────────────────────────────────────────
@@ -439,6 +452,7 @@ def auto_seed() -> None:
         print("[seed] Checking Directus schema...")
         create_templates_collection()
         create_tasks_collection()
+        fix_tasks_sort_field()
         set_permissions()
         seed_templates()
         print("[seed] Done.")
