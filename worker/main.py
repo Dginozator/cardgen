@@ -181,10 +181,11 @@ async def generate(
     """
     Start a generation task.
 
-    1. Upload product image to Directus
-    2. Create generation_task record (status=pending)
-    3. Run pipeline in background
-    4. Return task_id for polling
+    1. Validate user token & get user_id
+    2. Upload product image to Directus (as user)
+    3. Create generation_task record (as user, with user_id)
+    4. Run pipeline in background (as admin/service)
+    5. Return task_id for polling
     """
     # Validate file
     body = await product_image.read()
@@ -194,25 +195,32 @@ async def generate(
         raise HTTPException(status_code=400, detail=f"Файл слишком большой (макс. {MAX_UPLOAD_MB} МБ).")
 
     user_token = _extract_token(authorization)
+    if not user_token:
+        raise HTTPException(status_code=401, detail="Требуется авторизация.")
 
-    # Pick a working Directus token: user token → static token → none
+    # Use user token — Directus enforces per-user permissions
     d = _get_directus(user_token)
-    try:
-        await d.get_templates(is_active=True)
-    except Exception:
-        if DIRECTUS_TOKEN:
-            logger.warning("generate: user token invalid, falling back to static token")
-            d = _get_directus(DIRECTUS_TOKEN)
-        else:
-            logger.warning("generate: user token invalid, no static token available")
 
-    # Upload product image to Directus
+    # Verify token & get user_id
+    try:
+        me = await d.get_me()
+        user_id = me.get("id", "") if isinstance(me, dict) else ""
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Не удалось определить пользователя.")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.warning("generate: user token invalid: %s", e)
+        raise HTTPException(status_code=401, detail="Токен истёк. Обновите страницу и войдите заново.") from e
+
+    # Parse bullets
     try:
         import json
         bullets = json.loads(bullets_json) if bullets_json else []
     except Exception:
         bullets = []
 
+    # Upload product image to Directus (as user)
     try:
         file_record = await d.upload_file(body, product_image.filename or "product.png")
         file_id = file_record.get("id", "")
@@ -220,11 +228,12 @@ async def generate(
         logger.exception("failed to upload product image")
         raise HTTPException(status_code=502, detail=f"Ошибка загрузки файла: {e}") from e
 
-    # Create task
+    # Create task (as user, with user_id)
     task_id = str(uuid.uuid4())
     try:
         task = await d.create_task({
             "id": task_id,
+            "user_id": user_id,
             "template": template_id,
             "status": "pending",
             "input_data": {
@@ -238,9 +247,11 @@ async def generate(
         logger.exception("failed to create task")
         raise HTTPException(status_code=502, detail=f"Ошибка создания задачи: {e}") from e
 
-    # Run pipeline in background
+    # Run pipeline in background — use admin/service token
+    d_admin = _get_directus(DIRECTUS_TOKEN or None)
+
     async def _run():
-        await run_generation(task_id, d)
+        await run_generation(task_id, d_admin)
 
     bg_task = asyncio.create_task(_run())
     _track_task(bg_task)
@@ -249,9 +260,10 @@ async def generate(
 
 
 @app.get("/task/{task_id}")
-async def get_task(task_id: str) -> dict:
-    """Poll task status."""
-    d = _get_directus()
+async def get_task(task_id: str, authorization: str | None = Header(None)) -> dict:
+    """Poll task status. Uses user token so Directus enforces per-user access."""
+    user_token = _extract_token(authorization)
+    d = _get_directus(user_token)
     try:
         task = await d.get_task(task_id)
         return {

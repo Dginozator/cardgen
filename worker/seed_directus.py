@@ -243,6 +243,12 @@ def create_tasks_collection() -> None:
             "schema": {"is_primary_key": True},
         },
         {
+            "field": "user_id",
+            "type": "uuid",
+            "meta": {"interface": "select-dropdown-m2o", "special": ["m2o"], "options": {"template": "{{id}}"}},
+            "schema": {"is_nullable": True, "foreign_key_table": "directus_users", "foreign_key_column": "id"},
+        },
+        {
             "field": "status",
             "type": "string",
             "meta": {"interface": "select-dropdown", "options": {"choices": [

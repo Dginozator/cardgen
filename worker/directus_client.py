@@ -50,6 +50,10 @@ class DirectusClient:
             params["filter"] = '{"is_active":{"_eq":true}}'
         return await self._request("GET", "/items/templates", params=params)
 
+    async def get_me(self) -> dict:
+        """Return current user info (id, email, etc.) for the active token."""
+        return await self._request("GET", "/users/me?fields=id,email")
+
     async def get_template(self, template_id: str) -> dict:
         return await self._request("GET", f"/items/templates/{template_id}")
 
