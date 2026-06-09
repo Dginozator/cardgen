@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from typing import Any
 
 import httpx
@@ -32,15 +33,38 @@ class DirectusClient:
         hdrs = self._headers()
         if headers:
             hdrs.update(headers)
-        async with httpx.AsyncClient(timeout=60) as client:
-            resp = await client.request(method, url, headers=hdrs, json=json, params=params, content=content)
-            resp.raise_for_status()
-            if not resp.content:
-                return None
-            data = resp.json()
-            if isinstance(data, dict) and "data" in data:
-                return data["data"]
-            return data
+
+        # Tag generation_tasks requests for easy filtering
+        tag = "[GENERATION_TASKS] " if "/items/generation_tasks" in path else ""
+
+        logger.info(
+            "%s%s %s | params=%s | payload=%s",
+            tag, method, url, params, json,
+        )
+
+        t0 = time.perf_counter()
+        try:
+            async with httpx.AsyncClient(timeout=60) as client:
+                resp = await client.request(method, url, headers=hdrs, json=json, params=params, content=content)
+                elapsed = time.perf_counter() - t0
+                logger.info(
+                    "%s%s %s -> %s (%d bytes) in %.3fs",
+                    tag, method, url, resp.status_code, len(resp.content), elapsed,
+                )
+                resp.raise_for_status()
+                if not resp.content:
+                    return None
+                data = resp.json()
+                if isinstance(data, dict) and "data" in data:
+                    return data["data"]
+                return data
+        except Exception as exc:
+            elapsed = time.perf_counter() - t0
+            logger.error(
+                "%s%s %s FAILED in %.3fs: %s",
+                tag, method, url, elapsed, exc,
+            )
+            raise
 
     # --- Templates ---
 
