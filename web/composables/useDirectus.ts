@@ -50,11 +50,25 @@ export function useDirectus() {
       headers.set("Authorization", `Bearer ${session.token.value}`);
     }
     const url = `${base}${path.startsWith("/") ? path : `/${path}`}`;
+    const method = init.method || "GET";
+
+    const isGT = path.includes("/items/generation_tasks");
+    const tag = isGT ? "[GENERATION_TASKS] " : "";
+
+    console.log(`${tag}${method} ${url}`, init.body ?? "");
+
+    const t0 = performance.now();
     const res = await fetch(url, { ...init, headers });
+    const elapsed = ((performance.now() - t0) / 1000).toFixed(3);
     const body = await parseJsonSafe(res);
+
     if (!res.ok) {
+      console.error(`${tag}${method} ${url} -> ${res.status} in ${elapsed}s`, body);
       throw new Error(extractError(body, `HTTP ${res.status}`));
     }
+
+    console.log(`${tag}${method} ${url} -> ${res.status} in ${elapsed}s`);
+
     if (body && typeof body === "object" && "data" in body) {
       return (body as { data: T }).data;
     }
