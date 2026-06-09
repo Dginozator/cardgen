@@ -1,6 +1,7 @@
 /**
  * Composable for template-based infographic generation.
- * Talks to the worker API (/api/w/).
+ *
+ * Flow: client → Directus (create task + upload file) → worker (process) → Directus (poll status).
  */
 
 export type Template = {
@@ -39,7 +40,9 @@ export function useGeneration() {
   const config = useRuntimeConfig();
   const session = useAuthSession();
   const { ensureFreshToken } = session;
-  const base = (config.public.workerBase as string) || "/api/w";
+  const directus = useDirectus();
+  const workerBase = (config.public.workerBase as string) || "/api/w";
+  const directusBase = (config.public.directusBase as string) || "/api/d";
 
   const templates = ref<Template[]>([]);
   const selectedTemplate = ref<Template | null>(null);
@@ -54,7 +57,7 @@ export function useGeneration() {
     error.value = "";
     try {
       await ensureFreshToken();
-      const data = await $fetch<Template[]>(`${base}/templates`, {
+      const data = await $fetch<Template[]>(`${workerBase}/templates`, {
         headers: { Authorization: `Bearer ${session.token.value}` },
       });
       templates.value = Array.isArray(data) ? data : [];
@@ -81,27 +84,31 @@ export function useGeneration() {
 
     try {
       await ensureFreshToken();
-      const formData = new FormData();
-      formData.append("template_id", selectedTemplate.value!.id);
-      formData.append("title", opts.title);
-      formData.append("bullets_json", JSON.stringify(opts.bullets));
-      formData.append("product_image", opts.productImage);
 
-      const task = await $fetch<{ ok: boolean; task_id: string }>(
-        `${base}/generate`,
-        {
-          method: "POST",
-          body: formData,
-          headers: { Authorization: `Bearer ${session.token.value}` },
+      // 1. Upload product image to Directus
+      const fileRecord = await directus.uploadFile(opts.productImage);
+      const fileId = fileRecord.id;
+      if (!fileId) throw new Error("Не удалось загрузить изображение.");
+
+      // 2. Create generation_task directly in Directus
+      const task = await directus.createTask({
+        template: selectedTemplate.value!.id,
+        input_data: {
+          product_image_file_id: fileId,
+          title: opts.title,
+          bullets: opts.bullets,
         },
-      );
+      });
+      const taskId = task.id as string;
+      if (!taskId) throw new Error("Сервер не вернул task_id");
 
-      if (!task.ok || !task.task_id) {
-        throw new Error("Сервер не вернул task_id");
-      }
+      // 3. Trigger worker to process the task
+      await $fetch<{ ok: boolean }>(`${workerBase}/process/${taskId}`, {
+        method: "POST",
+      });
 
-      // Start polling
-      await _pollTask(task.task_id);
+      // 4. Start polling Directus for status
+      await _pollTask(taskId);
     } catch (e: unknown) {
       error.value = _extractError(e, "Ошибка генерации.");
     } finally {
@@ -116,9 +123,15 @@ export function useGeneration() {
       await _sleep(POLL_INTERVAL);
 
       try {
-        const task = await $fetch<Task>(`${base}/task/${taskId}`, {
-          headers: { Authorization: `Bearer ${session.token.value}` },
-        });
+        const raw = await directus.getTask(taskId);
+        const task: Task = {
+          ok: true,
+          id: (raw.id as string) || taskId,
+          status: (raw.status as TaskStatus) || "pending",
+          result_image: (raw.result_image as string) || null,
+          enhanced_prompt: (raw.enhanced_prompt as string) || null,
+          error_message: (raw.error_message as string) || null,
+        };
         currentTask.value = task;
 
         if (task.status === "completed") {
@@ -139,10 +152,9 @@ export function useGeneration() {
 
   async function _loadResultImage(task: Task) {
     if (!task.result_image) return;
-    const dBase = (config.public.directusBase as string) || "/api/d";
     try {
       await ensureFreshToken();
-      const resp = await fetch(`${dBase}/assets/${task.result_image}`, {
+      const resp = await fetch(`${directusBase}/assets/${task.result_image}`, {
         headers: { Authorization: `Bearer ${session.token.value}` },
       });
       if (!resp.ok) return;

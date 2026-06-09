@@ -259,6 +259,37 @@ async def generate(
     return {"ok": True, "task_id": task_id}
 
 
+@app.post("/process/{task_id}")
+async def process_task(task_id: str) -> dict:
+    """Trigger background processing for an existing task.
+
+    The task must already exist in Directus (created by the client directly).
+    This endpoint starts the pipeline in the background using the admin/service token.
+    """
+    if not DIRECTUS_TOKEN:
+        raise HTTPException(status_code=503, detail="Worker has no DIRECTUS_TOKEN configured.")
+
+    d_admin = _get_directus(DIRECTUS_TOKEN)
+
+    # Verify task exists and is pending
+    try:
+        task = await d_admin.get_task(task_id)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail="Task not found") from e
+
+    status = task.get("status", "")
+    if status not in ("pending",):
+        raise HTTPException(status_code=409, detail=f"Task status is '{status}', expected 'pending'.")
+
+    async def _run():
+        await run_generation(task_id, d_admin)
+
+    bg_task = asyncio.create_task(_run())
+    _track_task(bg_task)
+
+    return {"ok": True, "task_id": task_id}
+
+
 @app.get("/task/{task_id}")
 async def get_task(task_id: str, authorization: str | None = Header(None)) -> dict:
     """Poll task status. Uses user token so Directus enforces per-user access."""

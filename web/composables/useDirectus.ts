@@ -5,6 +5,13 @@ type DirectusUser = {
   last_name?: string | null;
 };
 
+export type DirectusFile = {
+  id: string;
+  type?: string;
+  title?: string;
+  filename_download?: string;
+};
+
 async function parseJsonSafe(res: Response): Promise<unknown> {
   const text = await res.text();
   if (!text) return null;
@@ -88,7 +95,56 @@ export function useDirectus() {
     session.clearSession();
   }
 
-  return { getMe, deleteAccount };
+  // ── File uploads (FormData — cannot use json request helper) ──────
+
+  async function uploadFile(file: File): Promise<DirectusFile> {
+    await ensureFreshToken();
+    const formData = new FormData();
+    formData.append("file", file);
+    const headers = new Headers();
+    if (session.token.value) {
+      headers.set("Authorization", `Bearer ${session.token.value}`);
+    }
+    const url = `${base}/files`;
+    console.log(`[DIRECTUS] POST ${url} upload=${file.name}`);
+
+    const t0 = performance.now();
+    const res = await fetch(url, { method: "POST", headers, body: formData });
+    const elapsed = ((performance.now() - t0) / 1000).toFixed(3);
+    const body = await parseJsonSafe(res);
+
+    if (!res.ok) {
+      console.error(`[DIRECTUS] POST ${url} -> ${res.status} in ${elapsed}s`, body);
+      throw new Error(extractError(body, `HTTP ${res.status}`));
+    }
+    console.log(`[DIRECTUS] POST ${url} -> ${res.status} in ${elapsed}s`);
+
+    if (body && typeof body === "object" && "data" in body) {
+      return (body as { data: DirectusFile }).data;
+    }
+    return body as DirectusFile;
+  }
+
+  // ── Generation tasks ─────────────────────────────────────────────
+
+  async function createTask(payload: {
+    template: string;
+    input_data: Record<string, unknown>;
+  }): Promise<{ id: string } & Record<string, unknown>> {
+    return request<{ id: string } & Record<string, unknown>>(
+      "/items/generation_tasks",
+      { method: "POST", body: JSON.stringify(payload) },
+    );
+  }
+
+  async function getTask(taskId: string): Promise<Record<string, unknown>> {
+    return request<Record<string, unknown>>(
+      `/items/generation_tasks/${taskId}`,
+      { method: "GET" },
+    );
+  }
+
+  return { getMe, deleteAccount, uploadFile, createTask, getTask };
 }
 
 export type { DirectusUser };
