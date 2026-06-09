@@ -73,6 +73,13 @@ def _extract_image_bytes(response: Any) -> bytes:
                         val = img.get(key, "")
                         if isinstance(val, str) and len(val) > 100:
                             return base64.standard_b64decode(val)
+                    # Handle {"type":"image_url","image_url":{"url":"data:..."}}
+                    image_url = img.get("image_url", {})
+                    if isinstance(image_url, dict):
+                        url = image_url.get("url", "")
+                        if url.startswith("data:"):
+                            _, _, b64 = url.partition(";base64,")
+                            return base64.standard_b64decode(b64)
 
     # Check inline data
     extra = getattr(message, "__pydantic_extra__", None) or {}
