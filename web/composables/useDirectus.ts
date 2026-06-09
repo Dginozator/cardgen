@@ -128,6 +128,7 @@ export function useDirectus() {
   // ── Generation tasks ─────────────────────────────────────────────
 
   async function createTask(payload: {
+    user_id: string;
     template: string;
     input_data: Record<string, unknown>;
   }): Promise<{ id: string } & Record<string, unknown>> {

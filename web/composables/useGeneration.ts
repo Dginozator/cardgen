@@ -85,13 +85,19 @@ export function useGeneration() {
     try {
       await ensureFreshToken();
 
-      // 1. Upload product image to Directus
+      // 1. Get current user id
+      const me = await directus.getMe();
+      const userId = me.id;
+      if (!userId) throw new Error("Не удалось определить пользователя.");
+
+      // 2. Upload product image to Directus
       const fileRecord = await directus.uploadFile(opts.productImage);
       const fileId = fileRecord.id;
       if (!fileId) throw new Error("Не удалось загрузить изображение.");
 
-      // 2. Create generation_task directly in Directus
+      // 3. Create generation_task directly in Directus
       const task = await directus.createTask({
+        user_id: userId,
         template: selectedTemplate.value!.id,
         input_data: {
           product_image_file_id: fileId,
