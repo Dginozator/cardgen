@@ -81,6 +81,15 @@ class DirectusClient:
     async def get_template(self, template_id: str) -> dict:
         return await self._request("GET", f"/items/templates/{template_id}")
 
+    async def update_template(self, template_id: str, payload: dict) -> dict:
+        return await self._request("PATCH", f"/items/templates/{template_id}", json=payload)
+
+    async def create_template(self, payload: dict) -> dict:
+        return await self._request("POST", "/items/templates", json=payload)
+
+    async def delete_template(self, template_id: str) -> None:
+        await self._request("DELETE", f"/items/templates/{template_id}")
+
     # --- Generation Tasks ---
 
     async def create_task(self, payload: dict) -> dict:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import io
 import logging
 import time
 import uuid
@@ -17,6 +18,7 @@ from .config import DIRECTUS_TOKEN, MAX_UPLOAD_MB, WORKER_HOST, WORKER_PORT
 from .directus_client import DirectusClient
 from .pipeline import run_generation
 from .seed_directus import auto_seed
+from .svg_compositor import SVGCompositor, UserData
 
 logger = logging.getLogger(__name__)
 
@@ -101,16 +103,6 @@ class TaskResponse(BaseModel):
     error_message: str | None = None
 
 
-class TemplateResponse(BaseModel):
-    id: str
-    name: str
-    slug: str
-    category: str | None = None
-    width: int
-    height: int
-    preview: str | None = None
-
-
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
@@ -130,28 +122,21 @@ async def health():
 
 @app.get("/templates")
 async def list_templates(authorization: str | None = Header(None)) -> list[dict]:
-    """List active templates from Directus.
-
-    Tries in order: user token → static service token → no token (public access).
-    This ensures templates are returned even when the user token has expired.
-    """
+    """List active templates from Directus."""
     token = _extract_token(authorization)
 
-    # 1. Try user token
     if token:
         try:
             return await _get_directus(token).get_templates(is_active=True)
         except Exception:
             logger.warning("user token failed for templates, trying fallbacks")
 
-    # 2. Try static service token
     if DIRECTUS_TOKEN:
         try:
             return await _get_directus(DIRECTUS_TOKEN).get_templates(is_active=True)
         except Exception:
             logger.warning("static token also failed for templates, trying public access")
 
-    # 3. Try without any token (public Directus access)
     try:
         return await _get_directus(token=None).get_templates(is_active=True)
     except Exception as e:
@@ -168,6 +153,166 @@ async def get_template(template_id: str, authorization: str | None = Header(None
         return await d.get_template(template_id)
     except Exception as e:
         raise HTTPException(status_code=404, detail="Template not found") from e
+
+
+@app.post("/templates/upload")
+async def upload_template(
+    name: str = Form(...),
+    slug: str = Form(...),
+    svg_file: UploadFile = File(...),
+    style_hints: str = Form(""),
+    output_format: str = Form("PNG"),
+    authorization: str | None = Header(None),
+) -> dict:
+    """
+    Upload an SVG template file.
+
+    1. Upload SVG to Directus as a file
+    2. Parse SVG to extract width/height
+    3. Create template record
+    4. Generate preview with demo data
+    """
+    token = _extract_token(authorization)
+    if not token and not DIRECTUS_TOKEN:
+        raise HTTPException(status_code=401, detail="Authorization required")
+    d = _get_directus(token or DIRECTUS_TOKEN)
+
+    # Read SVG
+    svg_bytes = await svg_file.read()
+    if not svg_bytes:
+        raise HTTPException(status_code=400, detail="Empty SVG file")
+
+    # Validate SVG
+    try:
+        compositor = SVGCompositor(svg_bytes)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid SVG: {e}") from e
+
+    warnings = compositor.validate()
+    if warnings:
+        logger.warning("Template validation warnings: %s", warnings)
+
+    width, height = compositor.get_canvas_size()
+
+    # Upload SVG file to Directus
+    svg_filename = f"template_{slug}.svg"
+    try:
+        file_record = await d.upload_file(svg_bytes, svg_filename, "image/svg+xml")
+        svg_file_id = file_record.get("id", "")
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Failed to upload SVG: {e}") from e
+
+    # Create template record
+    try:
+        template = await d.create_template({
+            "name": name,
+            "slug": slug,
+            "svg_file": svg_file_id,
+            "width": width,
+            "height": height,
+            "output_format": output_format,
+            "style_hints": style_hints,
+            "is_active": True,
+        })
+        template_id = template.get("id", "")
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Failed to create template: {e}") from e
+
+    # Generate preview in background
+    async def _gen_preview():
+        try:
+            preview_bytes = _generate_preview(svg_bytes, output_format)
+            preview_record = await d.upload_file(
+                preview_bytes,
+                f"preview_{slug}.png",
+                "image/png",
+            )
+            await d.update_template(template_id, {
+                "preview_image": preview_record.get("id", ""),
+            })
+            logger.info("preview generated for template %s", template_id)
+        except Exception:
+            logger.exception("failed to generate preview for template %s", template_id)
+
+    bg_task = asyncio.create_task(_gen_preview())
+    _track_task(bg_task)
+
+    return {
+        "ok": True,
+        "template_id": template_id,
+        "width": width,
+        "height": height,
+        "warnings": warnings,
+    }
+
+
+@app.post("/templates/{template_id}/regenerate-preview")
+async def regenerate_preview(
+    template_id: str,
+    authorization: str | None = Header(None),
+) -> dict:
+    """Regenerate preview image for a template."""
+    token = _extract_token(authorization)
+    if not token and not DIRECTUS_TOKEN:
+        raise HTTPException(status_code=401, detail="Authorization required")
+    d = _get_directus(token or DIRECTUS_TOKEN)
+
+    try:
+        template = await d.get_template(template_id)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail="Template not found") from e
+
+    svg_file_id = template.get("svg_file")
+    if not svg_file_id:
+        raise HTTPException(status_code=400, detail="Template has no SVG file")
+
+    svg_bytes = await d.download_file(svg_file_id)
+    output_format = template.get("output_format", "PNG")
+
+    preview_bytes = _generate_preview(svg_bytes, output_format)
+    preview_record = await d.upload_file(
+        preview_bytes,
+        f"preview_{template_id[:8]}.png",
+        "image/png",
+    )
+    await d.update_template(template_id, {
+        "preview_image": preview_record.get("id", ""),
+    })
+
+    return {"ok": True, "preview_image": preview_record.get("id", "")}
+
+
+def _generate_preview(svg_bytes: bytes, output_format: str = "PNG") -> bytes:
+    """Generate preview image from SVG with demo data."""
+    compositor = SVGCompositor(svg_bytes)
+
+    # Insert demo data
+    demo_data = UserData(
+        title="Demo Product",
+        bullets=["Feature One", "Feature Two", "Feature Three"],
+        product_image=_create_demo_image(),
+    )
+
+    if demo_data.product_image:
+        compositor.insert_product_image(demo_data.product_image)
+    compositor.insert_all_texts(demo_data)
+    compositor.insert_all_bullets(demo_data)
+
+    return compositor.render(output_format)
+
+
+def _create_demo_image() -> bytes:
+    """Create a simple placeholder product image."""
+    from PIL import Image, ImageDraw
+    img = Image.new("RGBA", (400, 400), (200, 200, 200, 255))
+    draw = ImageDraw.Draw(img)
+    # Draw a simple box with "PRODUCT" text
+    draw.rectangle([50, 50, 350, 350], outline=(100, 100, 100), width=3)
+    draw.line([50, 50, 350, 350], fill=(150, 150, 150), width=2)
+    draw.line([350, 50, 50, 350], fill=(150, 150, 150), width=2)
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    return buf.getvalue()
 
 
 @app.post("/generate")
@@ -187,7 +332,6 @@ async def generate(
     4. Run pipeline in background (as admin/service)
     5. Return task_id for polling
     """
-    # Validate file
     body = await product_image.read()
     if not body:
         raise HTTPException(status_code=400, detail="Пустой файл изображения.")
@@ -198,10 +342,8 @@ async def generate(
     if not user_token:
         raise HTTPException(status_code=401, detail="Требуется авторизация.")
 
-    # Use user token — Directus enforces per-user permissions
     d = _get_directus(user_token)
 
-    # Verify token & get user_id
     try:
         me = await d.get_me()
         user_id = me.get("id", "") if isinstance(me, dict) else ""
@@ -213,14 +355,12 @@ async def generate(
         logger.warning("generate: user token invalid: %s", e)
         raise HTTPException(status_code=401, detail="Токен истёк. Обновите страницу и войдите заново.") from e
 
-    # Parse bullets
+    import json
     try:
-        import json
         bullets = json.loads(bullets_json) if bullets_json else []
     except Exception:
         bullets = []
 
-    # Upload product image to Directus (as user)
     try:
         file_record = await d.upload_file(body, product_image.filename or "product.png")
         file_id = file_record.get("id", "")
@@ -228,7 +368,6 @@ async def generate(
         logger.exception("failed to upload product image")
         raise HTTPException(status_code=502, detail=f"Ошибка загрузки файла: {e}") from e
 
-    # Create task (as user, with user_id)
     task_id = str(uuid.uuid4())
     try:
         task = await d.create_task({
@@ -247,7 +386,6 @@ async def generate(
         logger.exception("failed to create task")
         raise HTTPException(status_code=502, detail=f"Ошибка создания задачи: {e}") from e
 
-    # Run pipeline in background — use admin/service token
     d_admin = _get_directus(DIRECTUS_TOKEN or None)
 
     async def _run():
@@ -261,17 +399,12 @@ async def generate(
 
 @app.post("/process/{task_id}")
 async def process_task(task_id: str) -> dict:
-    """Trigger background processing for an existing task.
-
-    The task must already exist in Directus (created by the client directly).
-    This endpoint starts the pipeline in the background using the admin/service token.
-    """
+    """Trigger background processing for an existing task."""
     if not DIRECTUS_TOKEN:
         raise HTTPException(status_code=503, detail="Worker has no DIRECTUS_TOKEN configured.")
 
     d_admin = _get_directus(DIRECTUS_TOKEN)
 
-    # Verify task exists and is pending
     try:
         task = await d_admin.get_task(task_id)
     except Exception as e:
@@ -292,7 +425,7 @@ async def process_task(task_id: str) -> dict:
 
 @app.get("/task/{task_id}")
 async def get_task(task_id: str, authorization: str | None = Header(None)) -> dict:
-    """Poll task status. Uses user token so Directus enforces per-user access."""
+    """Poll task status."""
     user_token = _extract_token(authorization)
     d = _get_directus(user_token)
     try:

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="900" height="1200" viewBox="0 0 900 1200" xmlns="http://www.w3.org/2000/svg">
+  <!-- AI background - will be replaced by generated image -->
+  <rect id="bg_ai" fill="#1a1a2e" width="900" height="1200"/>
+  <!-- Product takes full canvas with padding -->
+  <rect id="zone_product_image" x="50" y="50" width="800" height="1100" fill="transparent"/>
+</svg>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="900" height="900" viewBox="0 0 900 900" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg_gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="50%" stop-color="#16213e"/>
+      <stop offset="100%" stop-color="#0f3460"/>
+    </linearGradient>
+  </defs>
+  <rect id="bg" fill="url(#bg_gradient)" width="900" height="900"/>
+  <rect id="zone_product_image" x="100" y="50" width="700" height="450" fill="transparent"/>
+  <text id="zone_text_title" x="450" y="560" font-family="Arial, sans-serif" font-size="38" font-weight="bold" fill="#FFFFFF" text-anchor="middle">{{title}}</text>
+  <line x1="150" y1="590" x2="750" y2="590" stroke="rgba(79,195,247,0.3)" stroke-width="1"/>
+  <g id="zone_bullets_features" x="100" y="620" font-family="Arial, sans-serif" font-size="26" fill="#E0E0E0" data-bullet-color="#4FC3F7" data-line-spacing="12"></g>
+</svg>

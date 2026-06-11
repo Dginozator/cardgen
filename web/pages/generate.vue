@@ -25,13 +25,36 @@ const canGenerate = computed(
   () => selectedTemplate.value && productFile.value && !loading.value,
 );
 
+const directusBase = (useRuntimeConfig().public.directusBase as string) || "/api/d";
+
 const aspectLabel = computed(() => {
   if (!selectedTemplate.value) return "";
   const { width, height } = selectedTemplate.value;
   if (width === height) return "1:1";
   if (width * 4 === height * 3) return "3:4";
-  return `${width}:${height}`;
+  // Simplify common ratios
+  const g = gcd(width, height);
+  return `${width / g}:${height / g}`;
 });
+
+function gcd(a: number, b: number): number {
+  return b === 0 ? a : gcd(b, a % b);
+}
+
+function previewUrl(t: { preview_image?: string; width: number; height: number }): string {
+  if (t.preview_image) {
+    return `${directusBase}/assets/${t.preview_image}?width=400&height=540&fit=cover`;
+  }
+  return "";
+}
+
+function aspectLabelFor(t: { width: number; height: number }): string {
+  const { width, height } = t;
+  if (width === height) return "1:1";
+  if (width * 4 === height * 3) return "3:4";
+  const g = gcd(width, height);
+  return `${width / g}:${height / g}`;
+}
 
 // Lifecycle — load token first, then fetch templates
 onMounted(async () => {
@@ -115,12 +138,15 @@ function formatBytes(bytes: number): string {
             @click="selectTemplate(t)"
           >
             <div class="thumb">
-              <span class="dims">{{ t.width }}×{{ t.height }}</span>
-              <span class="ratio">{{ t.width === t.height ? '1:1' : '3:4' }}</span>
+              <img v-if="previewUrl(t)" :src="previewUrl(t)" alt="" class="thumb-img" />
+              <template v-else>
+                <span class="dims">{{ t.width }}×{{ t.height }}</span>
+              </template>
+              <span class="ratio">{{ aspectLabelFor(t) }}</span>
             </div>
             <div class="info">
               <strong>{{ t.name }}</strong>
-              <span v-if="t.category" class="cat">{{ t.category }}</span>
+              <span class="dims-small">{{ t.width }}×{{ t.height }}</span>
             </div>
           </div>
         </div>
@@ -291,12 +317,26 @@ function formatBytes(bytes: number): string {
   gap: 6px;
   color: #fff;
   font-size: 14px;
+  position: relative;
+}
+.thumb-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .ratio {
   background: rgba(255,255,255,0.15);
   border-radius: 4px;
   padding: 2px 8px;
   font-size: 12px;
+  position: relative;
+  z-index: 1;
+}
+.dims-small {
+  font-size: 12px;
+  color: #6b7280;
 }
 .info {
   padding: 10px 12px;

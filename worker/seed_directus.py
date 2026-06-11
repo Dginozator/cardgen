@@ -1,4 +1,4 @@
-"""Seed Directus schema: create collections (templates, generation_tasks) and seed MVP templates.
+"""Seed Directus schema: create collections (templates, generation_tasks) and seed SVG templates.
 
 Usage:
   python -m worker.seed_directus
@@ -11,7 +11,6 @@ from __future__ import annotations
 import json
 import os
 import sys
-import uuid
 
 import httpx
 
@@ -21,96 +20,6 @@ TOKEN = os.environ.get("DIRECTUS_TOKEN", "")
 HEADERS = {
     "Authorization": f"Bearer {TOKEN}",
     "Content-Type": "application/json",
-}
-
-# ── Layout definitions ──────────────────────────────────────────────
-
-MAIN_SLIDE_3_4 = {
-    "canvas": {"width": 900, "height": 1200},
-    "background": {
-        "type": "ai",
-        "style": "gradient",
-    },
-    "zones": [
-        {
-            "type": "product_image",
-            "x": 50, "y": 50, "w": 800, "h": 1100,
-            "fit": "contain",
-            "padding": 40,
-        },
-    ],
-}
-
-INFOGRAPHIC_3_4 = {
-    "canvas": {"width": 900, "height": 1200},
-    "background": {
-        "type": "gradient",
-        "colors": ["#0f0c29", "#302b63", "#24243e"],
-    },
-    "zones": [
-        {
-            "type": "product_image",
-            "x": 100, "y": 50, "w": 700, "h": 600,
-            "fit": "contain",
-            "padding": 30,
-        },
-        {
-            "type": "text",
-            "x": 50, "y": 680, "w": 800, "h": 120,
-            "field": "title",
-            "font_size": 44,
-            "font_weight": "bold",
-            "color": "#FFFFFF",
-            "align": "center",
-            "vertical_align": "middle",
-        },
-        {
-            "type": "bullets",
-            "x": 80, "y": 830, "w": 740, "h": 330,
-            "field": "bullets",
-            "font_size": 30,
-            "color": "#E0E0E0",
-            "bullet_char": "✓",
-            "line_spacing": 16,
-            "icon_color": "#4FC3F7",
-        },
-    ],
-}
-
-INFOGRAPHIC_1_1 = {
-    "canvas": {"width": 900, "height": 900},
-    "background": {
-        "type": "gradient",
-        "colors": ["#1a1a2e", "#16213e", "#0f3460"],
-    },
-    "zones": [
-        {
-            "type": "product_image",
-            "x": 100, "y": 50, "w": 700, "h": 450,
-            "fit": "contain",
-            "padding": 20,
-        },
-        {
-            "type": "text",
-            "x": 50, "y": 520, "w": 800, "h": 100,
-            "field": "title",
-            "font_size": 38,
-            "font_weight": "bold",
-            "color": "#FFFFFF",
-            "align": "center",
-            "vertical_align": "middle",
-        },
-        {
-            "type": "bullets",
-            "x": 80, "y": 640, "w": 740, "h": 230,
-            "field": "bullets",
-            "font_size": 26,
-            "color": "#E0E0E0",
-            "bullet_char": "✓",
-            "line_spacing": 12,
-            "icon_color": "#4FC3F7",
-        },
-    ],
 }
 
 # ── API helpers ──────────────────────────────────────────────────────
@@ -127,6 +36,11 @@ def api(method: str, path: str, *, json_data: dict | None = None, params: dict |
 
 def collection_exists(name: str) -> bool:
     resp = api("GET", f"/collections/{name}")
+    return bool(resp)
+
+
+def field_exists(collection: str, field_name: str) -> bool:
+    resp = api("GET", f"/fields/{collection}/{field_name}")
     return bool(resp)
 
 
@@ -174,10 +88,31 @@ def create_templates_collection() -> None:
             "schema": {"is_nullable": False},
         },
         {
-            "field": "category",
-            "type": "string",
-            "meta": {"interface": "input", "options": {"placeholder": "electronics"}},
-            "schema": {"is_nullable": True},
+            "field": "svg_file",
+            "type": "uuid",
+            "meta": {
+                "interface": "file-image",
+                "special": ["file"],
+                "options": {"accept": "image/svg+xml"},
+            },
+            "schema": {
+                "is_nullable": True,
+                "foreign_key_table": "directus_files",
+                "foreign_key_column": "id",
+            },
+        },
+        {
+            "field": "preview_image",
+            "type": "uuid",
+            "meta": {
+                "interface": "file-image",
+                "special": ["file"],
+            },
+            "schema": {
+                "is_nullable": True,
+                "foreign_key_table": "directus_files",
+                "foreign_key_column": "id",
+            },
         },
         {
             "field": "width",
@@ -190,30 +125,6 @@ def create_templates_collection() -> None:
             "type": "integer",
             "meta": {"interface": "input", "special": ["cast-integer"]},
             "schema": {"default_value": 1200, "is_nullable": False},
-        },
-        {
-            "field": "layout",
-            "type": "json",
-            "meta": {"interface": "input-code", "options": {"language": "json"}},
-            "schema": {"is_nullable": False},
-        },
-        {
-            "field": "preview",
-            "type": "uuid",
-            "meta": {"interface": "file-image", "special": ["file"]},
-            "schema": {"is_nullable": True},
-        },
-        {
-            "field": "is_active",
-            "type": "boolean",
-            "meta": {"interface": "boolean", "special": ["cast-boolean"]},
-            "schema": {"default_value": True, "is_nullable": False},
-        },
-        {
-            "field": "sort",
-            "type": "integer",
-            "meta": {"interface": "input", "special": ["cast-integer"]},
-            "schema": {"default_value": 0, "is_nullable": True},
         },
         {
             "field": "output_format",
@@ -230,6 +141,18 @@ def create_templates_collection() -> None:
             "type": "text",
             "meta": {"interface": "input-textarea"},
             "schema": {"is_nullable": True},
+        },
+        {
+            "field": "is_active",
+            "type": "boolean",
+            "meta": {"interface": "boolean", "special": ["cast-boolean"]},
+            "schema": {"default_value": True, "is_nullable": False},
+        },
+        {
+            "field": "sort",
+            "type": "integer",
+            "meta": {"interface": "input", "special": ["cast-integer"]},
+            "schema": {"default_value": 0, "is_nullable": True},
         },
     ], icon="art_track")
 
@@ -262,7 +185,7 @@ def create_tasks_collection() -> None:
         {
             "field": "template",
             "type": "integer",
-            "meta": {"interface": "select-dropdown-m2o", "special": ["m2o"], "options": {"template": "{{name}}"}} ,
+            "meta": {"interface": "select-dropdown-m2o", "special": ["m2o"], "options": {"template": "{{name}}"}},
             "schema": {"is_nullable": False, "foreign_key_table": "templates", "foreign_key_column": "id"},
         },
         {
@@ -302,6 +225,63 @@ def create_tasks_collection() -> None:
             "schema": {"is_nullable": True},
         },
     ], icon="assignment", sort_field=None)
+
+
+# ── Schema migrations for existing collections ──────────────────────
+
+def migrate_templates_collection() -> None:
+    """Add svg_file and preview_image fields to existing templates collection."""
+    if not collection_exists("templates"):
+        return
+
+    # Add svg_file if missing
+    if not field_exists("templates", "svg_file"):
+        print("  Adding svg_file field to templates...")
+        api("POST", "/fields/templates", json_data={
+            "field": "svg_file",
+            "type": "uuid",
+            "meta": {
+                "interface": "file-image",
+                "special": ["file"],
+                "options": {"accept": "image/svg+xml"},
+            },
+            "schema": {
+                "is_nullable": True,
+                "foreign_key_table": "directus_files",
+                "foreign_key_column": "id",
+            },
+        })
+        print("  ✓ Added svg_file.")
+
+    # Add preview_image if missing
+    if not field_exists("templates", "preview_image"):
+        print("  Adding preview_image field to templates...")
+        api("POST", "/fields/templates", json_data={
+            "field": "preview_image",
+            "type": "uuid",
+            "meta": {
+                "interface": "file-image",
+                "special": ["file"],
+            },
+            "schema": {
+                "is_nullable": True,
+                "foreign_key_table": "directus_files",
+                "foreign_key_column": "id",
+            },
+        })
+        print("  ✓ Added preview_image.")
+
+    # Remove old layout field if it exists
+    if field_exists("templates", "layout"):
+        print("  Removing old layout field from templates...")
+        api("DELETE", "/fields/templates/layout")
+        print("  ✓ Removed layout.")
+
+    # Remove old category field if it exists
+    if field_exists("templates", "category"):
+        print("  Removing old category field from templates...")
+        api("DELETE", "/fields/templates/category")
+        print("  ✓ Removed category.")
 
 
 def fix_tasks_sort_field() -> None:
@@ -347,25 +327,23 @@ def set_permissions() -> None:
     for role in roles:
         role_id = role.get("id", "")
         role_name = role.get("name", "")
-        # Skip admin role (it already has full access)
         if role.get("admin_access") or role_name.lower() == "administrator":
             continue
 
         print(f"  Setting permissions for role '{role_name}' ({role_id})...")
 
         # Templates: read
-        existing = api("GET", f"/permissions?filter[role][_eq]={role_id}&filter[collection][_eq]=templates&filter[action][_eq]=read")
-        if not existing:
-            api("POST", "/permissions", json_data={
-                "role": role_id,
-                "collection": "templates",
-                "action": "read",
-                "permissions": {},
-                "fields": ["*"],
-            })
-            print(f"    ✓ Added templates:read for {role_name}")
-        else:
-            print(f"    templates:read already exists for {role_name}")
+        for action in ["read"]:
+            existing = api("GET", f"/permissions?filter[role][_eq]={role_id}&filter[collection][_eq]=templates&filter[action][_eq]={action}")
+            if not existing:
+                api("POST", "/permissions", json_data={
+                    "role": role_id,
+                    "collection": "templates",
+                    "action": action,
+                    "permissions": {},
+                    "fields": ["*"],
+                })
+                print(f"    ✓ Added templates:{action} for {role_name}")
 
         # Generation tasks: read, create, update
         for action in ["read", "create", "update"]:
@@ -379,11 +357,8 @@ def set_permissions() -> None:
                     "fields": ["*"],
                 })
                 print(f"    ✓ Added generation_tasks:{action} for {role_name}")
-            else:
-                print(f"    generation_tasks:{action} already exists for {role_name}")
 
-    # Also grant public/system access to directus_files for image uploads
-    # (users need to upload files via Directus)
+    # Also grant access to directus_files for image uploads
     for role in roles:
         role_id = role.get("id", "")
         role_name = role.get("name", "")
@@ -403,66 +378,10 @@ def set_permissions() -> None:
                 print(f"    ✓ Added directus_files:{action} for {role_name}")
 
 
-# ── Seed templates ───────────────────────────────────────────────────
-
-SEED_TEMPLATES = [
-    {
-        "name": "Главный слайд 3:4",
-        "slug": "ozon-main-3x4",
-        "category": "general",
-        "width": 900,
-        "height": 1200,
-        "layout": MAIN_SLIDE_3_4,
-        "is_active": True,
-        "sort": 1,
-        "output_format": "PNG",
-        "style_hints": "чистый фон, без текста, товар по центру, минимализм",
-    },
-    {
-        "name": "Инфографика 3:4",
-        "slug": "ozon-infographic-3x4",
-        "category": "general",
-        "width": 900,
-        "height": 1200,
-        "layout": INFOGRAPHIC_3_4,
-        "is_active": True,
-        "sort": 2,
-        "output_format": "PNG",
-        "style_hints": "тёмный градиент, белый текст, голубые акценты, товар сверху",
-    },
-    {
-        "name": "Инфографика 1:1",
-        "slug": "ozon-infographic-1x1",
-        "category": "general",
-        "width": 900,
-        "height": 900,
-        "layout": INFOGRAPHIC_1_1,
-        "is_active": True,
-        "sort": 3,
-        "output_format": "PNG",
-        "style_hints": "тёмный градиент, компактная раскладка, белый текст",
-    },
-]
-
-
-def seed_templates() -> None:
-    existing = api("GET", "/items/templates", params={"limit": -1})
-    existing_slugs = {t.get("slug") for t in (existing or [])}
-
-    for tmpl in SEED_TEMPLATES:
-        if tmpl["slug"] in existing_slugs:
-            print(f"  Template '{tmpl['slug']}' already exists, skipping.")
-            continue
-        print(f"  Creating template '{tmpl['slug']}'...")
-        payload = {**tmpl, "layout": json.dumps(tmpl["layout"])}
-        api("POST", "/items/templates", json_data=payload)
-        print(f"  ✓ Template '{tmpl['slug']}' created.")
-
-
 # ── Main ─────────────────────────────────────────────────────────────
 
 def auto_seed() -> None:
-    """Auto-seed on worker startup: create collections, set permissions, seed templates."""
+    """Auto-seed on worker startup: create/migrate collections, set permissions."""
     if not TOKEN:
         print("  [seed] No DIRECTUS_TOKEN, skipping auto-seed.")
         return
@@ -470,10 +389,10 @@ def auto_seed() -> None:
         print("[seed] Checking Directus schema...")
         create_templates_collection()
         create_tasks_collection()
+        migrate_templates_collection()
         fix_tasks_sort_field()
         fix_tasks_template_type()
         set_permissions()
-        seed_templates()
         print("[seed] Done.")
     except Exception as e:
         print(f"[seed] Error: {e}")
@@ -487,8 +406,8 @@ def main() -> None:
     print("Seeding Directus schema...")
     create_templates_collection()
     create_tasks_collection()
+    migrate_templates_collection()
     set_permissions()
-    seed_templates()
     print("Done!")
 
 

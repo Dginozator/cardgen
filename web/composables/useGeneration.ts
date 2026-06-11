@@ -8,11 +8,10 @@ export type Template = {
   id: string;
   name: string;
   slug: string;
-  category?: string;
   width: number;
   height: number;
-  layout: Record<string, unknown>;
-  preview?: string;
+  svg_file?: string;
+  preview_image?: string;
   is_active: boolean;
   output_format?: string;
   style_hints?: string;

@@ -1,13 +1,12 @@
-"""Generation pipeline: Directus → RouterAI → Compositor → Directus."""
+"""Generation pipeline: Directus → RouterAI → SVG Compositor → Directus."""
 
 from __future__ import annotations
 
 import logging
 import time
-import uuid
 from typing import Any
 
-from .compositor import UserData, compose
+from .svg_compositor import UserData, SVGCompositor, compose
 from .directus_client import DirectusClient
 from .routerai_client import enhance_bg_prompt, generate_background, make_client
 
@@ -19,9 +18,9 @@ async def run_generation(task_id: str, directus: DirectusClient) -> None:
     Full generation pipeline for a single task.
 
     1. Load task + template from Directus
-    2. Download product image
-    3. Generate AI background via RouterAI
-    4. Compose final image via Pillow
+    2. Download SVG template + product image
+    3. Generate AI background (if needed)
+    4. Compose final image via SVG compositor
     5. Upload result to Directus, update task status
     """
     t0 = time.perf_counter()
@@ -44,8 +43,15 @@ async def run_generation(task_id: str, directus: DirectusClient) -> None:
         # 2. Load template
         logger.info("pipeline[%s]: loading template %s", task_id, template_id)
         template = await directus.get_template(template_id)
-        layout = template.get("layout", {})
         style_hints = template.get("style_hints", "")
+
+        # Download SVG template
+        svg_file_id = template.get("svg_file")
+        if not svg_file_id:
+            raise ValueError("Template has no svg_file — upload an SVG template first")
+
+        logger.info("pipeline[%s]: downloading SVG template %s", task_id, svg_file_id)
+        svg_bytes = await directus.download_file(svg_file_id)
 
         # 3. Download product image
         product_file_id = input_data.get("product_image_file_id", "")
@@ -63,11 +69,24 @@ async def run_generation(task_id: str, directus: DirectusClient) -> None:
             extra=input_data.get("extra", {}),
         )
 
-        # 5. Generate AI background
+        # 5. Generate AI background (if template uses AI bg)
         bg_data: bytes | None = None
-        bg_type = layout.get("background", {}).get("type", "gradient")
+        compositor = SVGCompositor(svg_bytes)
+        canvas_w, canvas_h = compositor.get_canvas_size()
 
-        if bg_type == "ai":
+        # Check if template uses AI background (by convention: id="bg_ai")
+        has_ai_bg = False
+        for el in compositor.tree.iter():
+            el_id = el.get("id", "")
+            if el_id == "bg_ai":
+                has_ai_bg = True
+                break
+            # Also check for data attribute
+            if el.get("data-bg-type") == "ai":
+                has_ai_bg = True
+                break
+
+        if has_ai_bg:
             logger.info("pipeline[%s]: generating AI background", task_id)
             client = make_client()
             bg_prompt = enhance_bg_prompt(
@@ -77,12 +96,11 @@ async def run_generation(task_id: str, directus: DirectusClient) -> None:
                 user_data.bullets,
                 style_hints=style_hints,
             )
-            canvas = layout.get("canvas", {})
             bg_data = generate_background(
                 client,
                 bg_prompt,
-                width=canvas.get("width", 900),
-                height=canvas.get("height", 1200),
+                width=canvas_w,
+                height=canvas_h,
             )
             # Update enhanced_prompt in task
             await directus.update_task(task_id, {"enhanced_prompt": bg_prompt})
@@ -91,9 +109,9 @@ async def run_generation(task_id: str, directus: DirectusClient) -> None:
         output_format = template.get("output_format", "PNG")
 
         # 7. Compose
-        logger.info("pipeline[%s]: composing image", task_id)
+        logger.info("pipeline[%s]: composing image from SVG", task_id)
         result_bytes = compose(
-            layout=layout,
+            svg_bytes=svg_bytes,
             user_data=user_data,
             bg_image_data=bg_data,
             output_format=output_format,
