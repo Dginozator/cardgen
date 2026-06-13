@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="900" height="1200" viewBox="0 0 900 1200"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Inter, Arial, sans-serif">
+
+  <!-- ===== Фон ===== -->
+  <rect id="bg" x="0" y="0" width="900" height="1200" fill="#FFFFFF"/>
+
+  <!-- ===== Заголовок ===== -->
+  <text id="zone_text_title"
+        x="60" y="180"
+        font-size="180" font-weight="900"
+        fill="#7A1F1A" letter-spacing="-4">
+    {{title}}
+  </text>
+
+  <!-- ===== Подзаголовок ===== -->
+  <text id="zone_text_subtitle"
+        x="60" y="270"
+        font-size="56" font-weight="500"
+        fill="#3A3A3A">
+    {{subtitle}}
+  </text>
+
+  <!-- ===== Левый верхний callout: фото + текст ===== -->
+  <g id="callout_main">
+    <rect x="40" y="430" width="340" height="180" rx="16" fill="#FFFFFF"
+          stroke="#ECECEC" stroke-width="1"/>
+    <!-- Зелёный квадрат с фото товара -->
+    <rect x="56" y="446" width="120" height="120" rx="12" fill="#1F5C4A"/>
+    <rect id="zone_product_image" x="62" y="452" width="108" height="108" fill="transparent"/>
+
+    <!-- Текст бейджа -->
+    <text id="zone_text_callout1_title"
+          x="196" y="492" font-size="30" font-weight="800" fill="#111">
+      {{callout1_title}}
+    </text>
+    <text id="zone_text_callout1_sub"
+          x="196" y="556" font-size="22" font-weight="400" fill="#555">
+      {{callout1_sub}}
+    </text>
+
+    <!-- Курсор-стрелка (декор) -->
+    <g transform="translate(330 575)">
+      <circle r="22" fill="#1F5C4A"/>
+      <path d="M-8 -8 L8 8 M8 -2 L8 8 L-2 8" stroke="#FFF" stroke-width="3" fill="none" stroke-linecap="round"/>
+    </g>
+  </g>
+
+  <!-- ===== Левый нижний callout ===== -->
+  <g id="callout_secondary">
+    <rect x="40" y="660" width="340" height="140" rx="16" fill="#FFFFFF"
+          stroke="#ECECEC" stroke-width="1"/>
+    <text id="zone_text_callout2_title"
+          x="60" y="710" font-size="30" font-weight="800" fill="#111">
+      {{callout2_title}}
+    </text>
+    <text id="zone_text_callout2_sub"
+          x="60" y="760" font-size="22" font-weight="400" fill="#555">
+      {{callout2_sub}}
+    </text>
+    <g transform="translate(330 770)">
+      <circle r="22" fill="#1F5C4A"/>
+      <path d="M-8 -8 L8 8 M8 -2 L8 8 L-2 8" stroke="#FFF" stroke-width="3" fill="none" stroke-linecap="round"/>
+    </g>
+  </g>
+
+  <!-- ===== Правый бейдж с размером ===== -->
+  <g id="callout_size">
+    <!-- Стрелка-линия -->
+    <line x1="620" y1="500" x2="620" y2="820" stroke="#1F5C4A" stroke-width="4"/>
+    <polygon points="620,490 610,510 630,510" fill="#1F5C4A"/>
+    <polygon points="620,830 610,810 630,810" fill="#1F5C4A"/>
+
+    <!-- Бейдж -->
+    <rect x="660" y="600" width="200" height="120" rx="16" fill="#1F5C4A"/>
+    <text id="zone_text_size_value"
+          x="760" y="660" font-size="44" font-weight="900"
+          fill="#FFFFFF" text-anchor="middle">
+      {{size_value}}
+    </text>
+    <text id="zone_text_size_label"
+          x="760" y="700" font-size="22" font-weight="400"
+          fill="#FFFFFF" text-anchor="middle">
+      {{size_label}}
+    </text>
+
+    <!-- Курсор в углу -->
+    <g transform="translate(680 620)">
+      <circle r="16" fill="#FFFFFF"/>
+      <path d="M-5 -5 L5 5 M-5 5 L-5 -5 L5 -5" stroke="#1F5C4A" stroke-width="2.5" fill="none"/>
+    </g>
+  </g>
+
+  <!-- ===== Иконки-стикеры справа внизу (декор) ===== -->
+  <g id="icons_stack">
+    <rect x="780" y="940"  width="70" height="70" rx="14" fill="#1F5C4A"/>
+    <rect x="780" y="1025" width="70" height="70" rx="14" fill="#1F5C4A"/>
+    <rect x="780" y="1110" width="70" height="70" rx="14" fill="#1F5C4A"/>
+    <!-- Заполнить нужными path/glyph иконок (heart, whisk, like) -->
+  </g>
+
+  <!-- ===== Дисклеймер ===== -->
+  <text id="zone_text_disclaimer"
+        x="860" y="1170" font-size="14" fill="#9A9A9A" text-anchor="end">
+    {{disclaimer}}
+  </text>
+
+  <!-- ===== Резервная зона буллетов (если callout-бейджи не нужны) ===== -->
+  <g id="zone_bullets_features" x="60" y="850"
+     font-size="26" fill="#3A3A3A"
+     data-bullet-color="#1F5C4A" data-line-spacing="10">
+  </g>
+</svg>

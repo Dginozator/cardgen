@@ -1,7 +1,49 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="900" height="1200" viewBox="0 0 900 1200" xmlns="http://www.w3.org/2000/svg">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="900"
+   height="1200"
+   viewBox="0 0 900 1200"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="product-slide-3x4.svg"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="0.8475"
+     inkscape:cx="474.92625"
+     inkscape:cy="628.31858"
+     inkscape:window-width="2240"
+     inkscape:window-height="1294"
+     inkscape:window-x="-11"
+     inkscape:window-y="-11"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1" />
   <!-- AI background - will be replaced by generated image -->
-  <rect id="bg_ai" fill="#1a1a2e" width="900" height="1200"/>
+  <rect
+     id="bg_ai"
+     fill="#1a1a2e"
+     width="900"
+     height="1200" />
   <!-- Product takes full canvas with padding -->
-  <rect id="zone_product_image" x="50" y="50" width="800" height="1100" fill="transparent"/>
+  <rect
+     id="zone_product_image"
+     x="100"
+     y="125"
+     width="700"
+     height="950"
+     fill="transparent"
+     style="stroke-width:0.869299" />
 </svg>

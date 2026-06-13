@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="900" height="1200" viewBox="0 0 900 1200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="clip_product">
+      <rect x="100" y="50" width="700" height="600" rx="24"/>
+    </clipPath>
+  </defs>
+
+  <rect id="bg" fill="#1a1a2e" width="900" height="1200"/>
+
+  <g id="zone_product_image" clip-path="url(#clip_product)" data-fit="cover" data-gravity="center">
+    <rect x="100" y="50" width="700" height="600" fill="transparent"/>
+  </g>
+
+  <text id="zone_text_title" x="450" y="730" font-family="Inter, sans-serif" font-size="44" font-weight="bold" fill="#FFFFFF" text-anchor="middle">
+    <tspan x="450" dy="0">{{title_line_1}}</tspan>
+    <tspan x="450" dy="52">{{title_line_2}}</tspan>
+  </text>
+
+  <g id="zone_bullets_features" transform="translate(80, 840)" font-family="Inter, sans-serif" font-size="28" fill="#E0E0E0" data-bullet-color="#4FC3F7" data-line-spacing="16">
+    <text y="0">
+      <tspan fill="#4FC3F7" font-size="32">✓</tspan>
+      <tspan dx="12">{{bullet_1}}</tspan>
+    </text>
+    <text y="48">
+      <tspan fill="#4FC3F7" font-size="32">✓</tspan>
+      <tspan dx="12">{{bullet_2}}</tspan>
+    </text>
+  </g>
+</svg>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="900" height="1200" viewBox="0 0 900 1200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Фон -->
+  <rect id="bg" fill="#F4F5F7" width="900" height="1200"/>
+
+  <!-- Область под фото (позиция условная, товар отсутствует по центру макета) -->
+  <rect id="zone_product_image" x="250" y="300" width="400" height="800" fill="transparent"/>
+
+  <!-- Главные заголовки -->
+  <text id="zone_text_title" x="450" y="180" font-family="Arial, sans-serif" font-size="180" font-weight="900" fill="#7A1B17" text-anchor="middle" text-transform="uppercase">
+    {{title}}
+  </text>
+  <text id="zone_text_subtitle" x="450" y="280" font-family="Arial, sans-serif" font-size="55" fill="#333333" text-anchor="middle">
+    {{subtitle}}
+  </text>
+
+  <!-- Левая плашка 1 -->
+  <g x="50" y="380">
+    <rect width="280" height="260" rx="20" fill="#FFFFFF"/>
+    <rect x="20" y="20" width="240" height="130" rx="10" fill="#2E5C47"/>
+    <text id="zone_text_feature1_title" x="20" y="190" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="#333333">
+      {{feature1_title}}
+    </text>
+    <text id="zone_text_feature1_desc" x="20" y="230" font-family="Arial, sans-serif" font-size="18" fill="#333333">
+      {{feature1_desc}}
+    </text>
+  </g>
+
+  <!-- Левая плашка 2 -->
+  <g x="50" y="680">
+    <rect width="280" height="150" rx="20" fill="#FFFFFF"/>
+    <text id="zone_text_feature2_title" x="20" y="70" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="#333333">
+      {{feature2_title}}
+    </text>
+    <text id="zone_text_feature2_desc" x="20" y="120" font-family="Arial, sans-serif" font-size="18" fill="#333333">
+      {{feature2_desc}}
+    </text>
+  </g>
+
+  <!-- Правая плашка -->
+  <g x="650" y="550">
+    <path d="M50,0 Q150,0 150,100 Q150,200 50,200 Q-50,200 -50,100 Q-50,0 50,0 Z" fill="#2E5C47"/>
+    <text id="zone_text_size_val" x="50" y="110" font-family="Arial, sans-serif" font-size="45" font-weight="bold" fill="#FFFFFF" text-anchor="middle">
+      {{size_val}}
+    </text>
+    <text id="zone_text_size_desc" x="50" y="150" font-family="Arial, sans-serif" font-size="18" fill="#FFFFFF" text-anchor="middle">
+      {{size_desc}}
+    </text>
+  </g>
+</svg>

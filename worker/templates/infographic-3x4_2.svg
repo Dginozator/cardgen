@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="900" height="1200" viewBox="0 0 900 1200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgWarm" x1="0" y1="0" x2="0" y2="1200">
+      <stop offset="0" stop-color="#F8F8F0"/>
+      <stop offset="0.45" stop-color="#EAE8D8"/>
+      <stop offset="1" stop-color="#CDBB9B"/>
+    </linearGradient>
+
+    <linearGradient id="counterGrad" x1="0" y1="880" x2="0" y2="1200">
+      <stop offset="0" stop-color="#E7DEC9"/>
+      <stop offset="1" stop-color="#BCA47E"/>
+    </linearGradient>
+
+    <linearGradient id="titleRed" x1="0" y1="70" x2="0" y2="230">
+      <stop offset="0" stop-color="#D32A24"/>
+      <stop offset="0.55" stop-color="#A90E0E"/>
+      <stop offset="1" stop-color="#760606"/>
+    </linearGradient>
+
+    <linearGradient id="greenGrad" x1="650" y1="560" x2="850" y2="730">
+      <stop offset="0" stop-color="#0E8B65"/>
+      <stop offset="1" stop-color="#06583F"/>
+    </linearGradient>
+
+    <radialGradient id="creamGrad" cx="0.48" cy="0.28" r="0.75">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="0.65" stop-color="#F4EFD9"/>
+      <stop offset="1" stop-color="#D8C99F"/>
+    </radialGradient>
+
+    <radialGradient id="berryGrad" cx="0.35" cy="0.3" r="0.8">
+      <stop offset="0" stop-color="#FF8B63"/>
+      <stop offset="0.55" stop-color="#D71920"/>
+      <stop offset="1" stop-color="#7B0007"/>
+    </radialGradient>
+
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="7" flood-color="#000000" flood-opacity="0.24"/>
+    </filter>
+
+    <filter id="titleShadow" x="-5%" y="-10%" width="110%" height="125%">
+      <feDropShadow dx="0" dy="5" stdDeviation="2" flood-color="#000000" flood-opacity="0.32"/>
+    </filter>
+
+    <marker id="arrowHead" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M2 2 L10 6 L2 10 Z" fill="#0B5B45"/>
+    </marker>
+
+    <clipPath id="clipFeatureIcon">
+      <rect x="72" y="420" width="165" height="112" rx="8"/>
+    </clipPath>
+  </defs>
+
+  <rect id="bg_ai" width="900" height="1200" fill="url(#bgWarm)"/>
+
+  <g opacity="0.36">
+    <rect x="25" y="25" width="200" height="270" rx="22" fill="#FFFFFF"/>
+    <rect x="252" y="18" width="205" height="270" rx="22" fill="#FFFFFF"/>
+    <rect x="485" y="26" width="180" height="270" rx="22" fill="#FFFFFF"/>
+    <rect x="690" y="30" width="175" height="270" rx="22" fill="#FFFFFF"/>
+    <line x1="0" y1="305" x2="900" y2="305" stroke="#BFC1B5" stroke-width="4"/>
+    <line x1="0" y1="388" x2="900" y2="388" stroke="#BFC1B5" stroke-width="3"/>
+    <line x1="95" y1="40" x2="95" y2="285" stroke="#D9D9CD" stroke-width="6"/>
+    <line x1="350" y1="32" x2="350" y2="283" stroke="#D9D9CD" stroke-width="6"/>
+    <line x1="575" y1="38" x2="575" y2="282" stroke="#D9D9CD" stroke-width="6"/>
+    <line x1="778" y1="44" x2="778" y2="286" stroke="#D9D9CD" stroke-width="6"/>
+  </g>
+
+  <rect x="0" y="875" width="900" height="325" fill="url(#counterGrad)"/>
+
+  <g opacity="0.96">
+    <ellipse cx="590" cy="865" rx="320" ry="95" fill="#FFFFFF" opacity="0.48"/>
+    <path d="M295 835 C350 770 430 825 475 735 C510 670 553 792 600 720 C642 656 655 805 712 748 C775 690 766 820 820 785 C865 755 835 845 850 895 C790 963 395 990 295 835 Z" fill="url(#creamGrad)" opacity="0.96"/>
+    <path d="M275 845 C345 920 740 925 855 830 C840 980 748 1085 595 1098 C450 1110 320 1010 275 845 Z" fill="#F7F0DA" opacity="0.72"/>
+    <ellipse cx="575" cy="850" rx="300" ry="82" fill="none" stroke="#B5B4AA" stroke-width="6" opacity="0.65"/>
+    <ellipse cx="575" cy="850" rx="284" ry="68" fill="none" stroke="#FFFFFF" stroke-width="8" opacity="0.55"/>
+  </g>
+
+  <g>
+    <circle cx="522" cy="804" r="20" fill="url(#berryGrad)"/>
+    <circle cx="633" cy="918" r="18" fill="url(#berryGrad)"/>
+    <circle cx="733" cy="803" r="16" fill="url(#berryGrad)"/>
+    <circle cx="615" cy="705" r="17" fill="url(#berryGrad)"/>
+    <circle cx="820" cy="760" r="18" fill="url(#berryGrad)"/>
+    <circle cx="493" cy="936" r="19" fill="url(#berryGrad)"/>
+    <path d="M515 785 L525 775 L532 788 Z" fill="#E5F0D8"/>
+    <path d="M628 899 L640 891 L647 905 Z" fill="#E5F0D8"/>
+    <path d="M728 786 L739 778 L746 792 Z" fill="#E5F0D8"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <ellipse cx="160" cy="1085" rx="145" ry="38" fill="#EFECE2"/>
+    <ellipse cx="160" cy="1074" rx="125" ry="29" fill="#FFFFFF"/>
+    <path d="M112 1054 C145 1024 126 990 168 968 C148 1000 190 1009 181 1038 C208 1042 220 1060 221 1077 C190 1094 135 1094 95 1076 C93 1068 100 1060 112 1054 Z" fill="url(#creamGrad)"/>
+    <circle cx="78" cy="1080" r="18" fill="#B90014"/>
+    <circle cx="118" cy="1092" r="19" fill="#D71920"/>
+    <circle cx="185" cy="1090" r="20" fill="#D71920"/>
+    <circle cx="228" cy="1080" r="18" fill="#1F4F86"/>
+    <circle cx="265" cy="1092" r="19" fill="#1F4F86"/>
+  </g>
+
+  <rect id="zone_product_image" x="390" y="40" width="470" height="820" fill="transparent"/>
+
+  <path d="M820 118 C862 245 846 548 738 812" fill="none" stroke="#0B5B45" stroke-width="4" marker-end="url(#arrowHead)"/>
+  <path d="M802 132 L850 220" fill="none" stroke="#0B5B45" stroke-width="3" marker-start="url(#arrowHead)" marker-end="url(#arrowHead)"/>
+  <path d="M792 222 L842 135" fill="none" stroke="#0B5B45" stroke-width="3"/>
+
+  <text id="zone_text_title" x="52" y="228"
+        font-family="'Arial Black', Impact, Arial, sans-serif"
+        font-size="142" font-weight="900" letter-spacing="-5"
+        fill="url(#titleRed)" stroke="#6F0606" stroke-width="1"
+        filter="url(#titleShadow)">
+    {{title}}
+  </text>
+
+  <text id="zone_text_subtitle" x="76" y="318"
+        font-family="Arial, sans-serif"
+        font-size="48" font-weight="400"
+        fill="#050505" letter-spacing="1">
+    {{subtitle}}
+  </text>
+
+  <g filter="url(#shadow)">
+    <rect x="50" y="415" width="220" height="260" rx="18" fill="#FFFFFF" opacity="0.96"/>
+    <g clip-path="url(#clipFeatureIcon)">
+      <rect x="72" y="420" width="165" height="112" rx="8" fill="#0E8B6A"/>
+      <path d="M90 528 C95 470 115 438 145 414" fill="none" stroke="#BFE9DC" stroke-width="3"/>
+      <path d="M110 528 C112 468 128 432 150 410" fill="none" stroke="#BFE9DC" stroke-width="3"/>
+      <path d="M130 528 C130 468 138 430 154 408" fill="none" stroke="#BFE9DC" stroke-width="3"/>
+      <path d="M150 528 C148 470 147 432 158 408" fill="none" stroke="#BFE9DC" stroke-width="3"/>
+      <path d="M170 528 C165 472 158 435 162 410" fill="none" stroke="#BFE9DC" stroke-width="3"/>
+      <path d="M190 528 C182 472 170 438 166 412" fill="none" stroke="#BFE9DC" stroke-width="3"/>
+      <path d="M210 528 C197 475 182 442 170 415" fill="none" stroke="#BFE9DC" stroke-width="3"/>
+    </g>
+
+    <text id="zone_text_feature_1_title_top" x="73" y="565"
+          font-family="'Arial Black', Arial, sans-serif"
+          font-size="36" font-weight="900" fill="#000000">
+      {{feature_1_title_top}}
+    </text>
+    <text id="zone_text_feature_1_title_bottom" x="73" y="604"
+          font-family="'Arial Black', Arial, sans-serif"
+          font-size="36" font-weight="900" fill="#000000">
+      {{feature_1_title_bottom}}
+    </text>
+    <text id="zone_text_feature_1_desc_top" x="75" y="642"
+          font-family="Arial, sans-serif"
+          font-size="22" fill="#111111">
+      {{feature_1_desc_top}}
+    </text>
+    <text id="zone_text_feature_1_desc_bottom" x="75" y="668"
+          font-family="Arial, sans-serif"
+          font-size="22" fill="#111111">
+      {{feature_1_desc_bottom}}
+    </text>
+
+    <circle cx="242" cy="653" r="18" fill="#050505"/>
+    <path d="M232 643 L251 662 M251 662 L251 648 M251 662 L237 662"
+          fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="50" y="708" width="315" height="145" rx="14" fill="#FFFFFF" opacity="0.96"/>
+    <text id="zone_text_feature_2_title_top" x="72" y="760"
+          font-family="'Arial Black', Arial, sans-serif"
+          font-size="37" font-weight="900" fill="#000000">
+      {{feature_2_title_top}}
+    </text>
+    <text id="zone_text_feature_2_title_bottom" x="72" y="799"
+          font-family="'Arial Black', Arial, sans-serif"
+          font-size="37" font-weight="900" fill="#000000">
+      {{feature_2_title_bottom}}
+    </text>
+    <text id="zone_text_feature_2_desc" x="75" y="836"
+          font-family="Arial, sans-serif"
+          font-size="23" fill="#111111">
+      {{feature_2_desc}}
+    </text>
+
+    <circle cx="244" cy="816" r="20" fill="#050505"/>
+    <path d="M232 805 L254 827 M254 827 L254 812 M254 827 L239 827"
+          fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="682" y="565" width="168" height="162" rx="31" fill="url(#greenGrad)"/>
+    <circle cx="715" cy="597" r="20" fill="#FFFFFF"/>
+    <path d="M705 586 L724 605 M705 586 L705 601 M705 586 L720 586"
+          fill="none" stroke="#0B5B45" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <text id="zone_text_size_value" x="703" y="657"
+          font-family="'Arial Black', Arial, sans-serif"
+          font-size="55" font-weight="900" fill="#FFFFFF">
+      {{size_value}}
+    </text>
+    <text id="zone_text_size_label" x="701" y="686"
+          font-family="Arial, sans-serif"
+          font-size="19" fill="#FFFFFF">
+      {{size_label}}
+    </text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="795" y="918" width="52" height="52" rx="10" fill="#087153"/>
+    <path d="M821 956 C811 948 804 943 804 933 C804 925 814 922 821 930 C828 922 838 925 838 933 C838 943 831 948 821 956 Z"
+          fill="#FFFFFF"/>
+
+    <rect x="795" y="988" width="52" height="52" rx="10" fill="#087153"/>
+    <path d="M806 1024 C820 1005 832 998 842 992" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+    <ellipse cx="814" cy="1019" rx="8" ry="12" transform="rotate(45 814 1019)" fill="none" stroke="#FFFFFF" stroke-width="3"/>
+    <line x1="817" y1="1027" x2="804" y2="1036" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+
+    <rect x="795" y="1058" width="52" height="52" rx="10" fill="#087153"/>
+    <path d="M807 1092 L814 1092 L814 1071 L807 1071 Z" fill="#FFFFFF"/>
+    <path d="M818 1093 L836 1093 C842 1093 844 1087 844 1082 L844 1077 C844 1073 841 1070 837 1070 L829 1070 L830 1062 C831 1057 823 1054 820 1060 L817 1068 Z"
+          fill="#FFFFFF"/>
+  </g>
+
+  <text id="zone_text_disclaimer_1" x="682" y="1138"
+        font-family="Arial, sans-serif"
+        font-size="11" fill="#FFFFFF">
+    {{disclaimer_1}}
+  </text>
+  <text id="zone_text_disclaimer_2" x="682" y="1153"
+        font-family="Arial, sans-serif"
+        font-size="11" fill="#FFFFFF">
+    {{disclaimer_2}}
+  </text>
+  <text id="zone_text_disclaimer_3" x="682" y="1168"
+        font-family="Arial, sans-serif"
+        font-size="11" fill="#FFFFFF">
+    {{disclaimer_3}}
+  </text>
+</svg>
